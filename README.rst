@@ -1,5 +1,5 @@
-DependencyManager
-------------------
+Welcome to DependencyManager!
+=============================
 
 
 Introduction and Motivation
@@ -42,7 +42,7 @@ need to be able to modify their source code.
 Any modifications should be preserved so that they can be committed and pushed
 without transitioning to a different workspace.
 
-``DependencyManager`` facilitates our super-build model by providing the following
+:cmake:module:`DependencyManager` facilitates our super-build model by providing the following
 functionality:
 
 - declaration and population of dependencies by leveraging ``FetchContent``

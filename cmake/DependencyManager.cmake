@@ -4,6 +4,8 @@ DependencyManager
 
 .. contents::
 
+.. module:: DependencyManager
+
 Overview
 ^^^^^^^^
 
@@ -14,84 +16,86 @@ and version clashes.
 Declaring Dependency
 ^^^^^^^^^^^^^^^^^^^^
 
-.. command:: DependencyManager_Declare
+.. cmake:command:: DependencyManager_Declare
 
-  .. code-block:: cmake
+.. code-block:: cmake
 
     DependencyManager_Declare(<name> <gitRepository> [VERSION <versionRange>...]  [<contentOptions>...])
 
-  The ``DependencyManager_Declare()`` function is a wrapper over ``FetchContent_Declare()``
-  with specialised functionality::
+The :cmake:command:`DependencyManager_Declare()` function is a wrapper over `FetchContent_Declare()`_
+with specialised functionality
 
-  1. Source code is downloaded into ``${DEPENDENCYMANAGER_BASE_DIR}/<name>``
-  2. STAMP_DIR is in source, by default at ``${DEPENDENCYMANAGER_BASE_DIR}/.cmake_stamp_dir``
-  3. Only GIT repositories are supported
-  4. GIT_TAG must be stored in a file ``${DEPENDENCYMANAGER_BASE_DIR}/${name}_SHA1``
+1. Source code is downloaded into ``${DEPENDENCYMANAGER_BASE_DIR}/<name>``
+2. ``STAMP_DIR`` is in source, by default at ``${DEPENDENCYMANAGER_BASE_DIR}/.cmake_stamp_dir``
+3. Only Git repositories are supported
+4. Commit hash of dependency must be stored in a file ``${DEPENDENCYMANAGER_BASE_DIR}/${name}_SHA1``
 
-  The cached variable ``DEPENDENCYMANAGER_BASE_DIR`` is set to ``${CMAKE_SOURCE_DIR}/dependencies`` by default.
-  It should not be modified in the middle of the configuration process.
+The cached variable ``DEPENDENCYMANAGER_BASE_DIR`` is set to ``${CMAKE_SOURCE_DIR}/dependencies`` by default.
+It should not be modified in the middle of the configuration process.
 
-  The content ``<name>`` must be supported by ``FetchContent_Declare()``.
-  For version checking ``<name>`` must be the name given to top level call of ``project()`` in
-  the dependencies ``CMakeLists.txt``.
+The content ``<name>`` must be supported by `FetchContent_Declare()`_.
+For version checking ``<name>`` must be the name given to top level call of ``project()`` in
+the dependencies ``CMakeLists.txt``.
 
-  `<gitRepository>` must be a valid ``GIT_REPOSITORY`` as understood by ``ExternalProject_Add``.
+``<gitRepository>`` must be a valid ``GIT_REPOSITORY`` as understood by ``ExternalProject_Add``.
 
-  The ``<contentOptions>`` can be any of the GIT download or update/patch options
-  that the ``ExternalProject_Add`` command understands, except for ``GIT_TAG`` and ``GIT_REPOSITORY`` which are
-  specified separately.
+The ``<contentOptions>`` can be any of the GIT download or update/patch options
+that the ``ExternalProject_Add`` command understands, except for ``GIT_TAG`` and ``GIT_REPOSITORY`` which are
+specified separately.
 
-  The value of ``GIT_TAG`` passed to ``FetchContent`` must be a commit hash stored in
-  ``${DEPENDENCIES_DIR}/<name>_SHA1`` file.
+The value of ``GIT_TAG`` passed to ``FetchContent`` must be a commit hash stored in
+``${DEPENDENCIES_DIR}/<name>_SHA1`` file.
 
-  The ``<versionRange>`` specifies a compatible range of versions. Version of a dependency is read from
-  the ``${<name>_VERSION}`` variable which is automatically set when VERSION is specified in the ``project()`` call.
-  When there are duplicate dependencies ``<versionRange>`` is checked and if an already populated dependency
-  is outside that range an error is raised during configuration. Version must be specified as
-   ``<major>.[<minor>[.<patch>[.<tweak>]]]`` preceded by  ``<``, ``<=``, ``>``, ``>=`` to specify boundaries of the
-   range. If no relational operators are given that an exact match is requested.
-   A list of version specifications can be passed, separated by semicolon ``;``.
-   For example, ``>=1.2.3;<1.8`` means from version ``1.2.3`` up to but not including version ``1.8``;
-   ``>1.2.3`` is any version greater than ``1.2.3``; ``<=1.8`` any version up to and including ``1.8``;
-   and ``1.2.3`` requests an exact match.
+The ``<versionRange>`` specifies a list of compatible versions. Version of a dependency is read from
+the ``${<name>_VERSION}`` variable which is automatically set when VERSION is specified in the ``project()`` call.
+When there are duplicate dependencies ``<versionRange>`` is checked and if an already populated dependency
+is outside that range an error is raised during configuration. Version must be specified as
+``<major>.[<minor>[.<patch>[.<tweak>]]]`` preceded by  ``<``, ``<=``, ``>``, ``>=`` to specify boundaries of the
+range. If no relational operators are given that an exact match is requested.
+A list of version specifications can be passed.
+For example, ``>=1.2.3;<1.8`` means from version ``1.2.3`` up to but not including version ``1.8``;
+``>1.2.3`` is any version greater than ``1.2.3``; ``<=1.8`` any version up to and including ``1.8``;
+and ``1.2.3`` requests an exact match.
 
 Populating Dependency
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. command:: DependencyManager_Populate
+.. cmake:command:: DependencyManager_Populate
 
-  .. code-block:: cmake
+.. code-block:: cmake
 
     DependencyManager_Populate(<name> [DO_NOT_MAKE_AVAILABLE] [NO_VERSION_ERROR])
 
-  This is a again a wrapper over ``FetchContent_Populate()``.
-  A call to :command:`DependencyManager_Populate` must have been made first.
+This is a again a wrapper over `FetchContent_Populate()`_.
+A call to :cmake:command:`DependencyManager_Declare()` must have been made first.
 
-  ``<name>`` must be the same as in previous call to  ``DependencyManager_Populate()``.
+``<name>`` must be the same as in previous call to  :cmake:command:`DependencyManager_Populate()`.
 
-  After populating the content ``add_subdirectory()`` is called by default, unless ``DO_NOT_MAKE_AVAILABLE`` is set.
+After populating the content ``add_subdirectory()`` is called by default, unless ``DO_NOT_MAKE_AVAILABLE`` is set.
 
-  If subdirectory gets added, a version check is performed. When requested version is not compatible with the
-  version that took priority at declaration stage (i.e. duplicate dependencies) the default behaviour is for
-  a ``FATAL_ERROR`` to get raised. If ``NO_VERSION_ERROR`` is set, than a ``WARNING`` is printed instead
-  and configuration continues.
+If subdirectory gets added, a version check is performed. When requested version is not compatible with the
+version that took priority at declaration stage (i.e. duplicate dependencies) the default behaviour is for
+a ``FATAL_ERROR`` to get raised. If ``NO_VERSION_ERROR`` is set, than a ``WARNING`` is printed instead
+and configuration continues.
 
-  Note, that file locking is used which acts as a mutex when multiple configurations are run simultaneously.
-  The file lock files are stored in ``STAMP_DIR``.
+Note, that file locking is used which acts as a mutex when multiple configurations are run simultaneously.
+The file lock files are stored in ``STAMP_DIR``.
 
 
 Update of Commit Hash
 ^^^^^^^^^^^^^^^^^^^^^
 
-  Every time CMake configuration is rerun an update step is initiated which uses commit hash from ``<name>_SHA1`` file,
-  checking out the correct version if for some reason a dependency is at a different commit.
-  Only advanced users with good knowledge of softwrare stack should modify the ``<name>_SHA1`` file.
-  This applies to developers who in this paradigm need to be able to modify the source code of dependencies
-  and/or checkout a different commit and successfully configure the build.
-  Setting cache variable ``DEPENDENCYMANAGER_HASH_UPDATE`` to ON will overwrite ``<name>_SHA1`` file with the
-  currently checked out hash before the update stage, making sure that the work is preserved.
+Every time CMake configuration is rerun an update step is initiated which uses commit hash from ``<name>_SHA1`` file,
+checking out the correct version if for some reason a dependency is at a different commit.
+Only advanced users with good knowledge of software stack should modify the ``<name>_SHA1`` file.
+This applies to developers who in this paradigm need to be able to modify the source code of dependencies
+and/or checkout a different commit and successfully configure the build.
+Setting cache variable ``DEPENDENCYMANAGER_HASH_UPDATE`` to ON will overwrite ``<name>_SHA1`` file with the
+currently checked out hash before the update stage, making sure that the work is preserved.
 
 
+.. _FetchContent_Declare(): https://cmake.org/cmake/help/latest/module/FetchContent.html#command:fetchcontent_declare
+.. _FetchContent_Populate(): https://cmake.org/cmake/help/latest/module/FetchContent.html#command:fetchcontent_populate
 #]=======================================================================]
 
 include(FetchContent)
