@@ -49,5 +49,5 @@ functionality:
 - placement of dependencies outside of build directory, in source
 - locking to ensure multiple cmake configurations can run simultaneously without conflict
 - management of declared dependency commit hashes for needs of users OR developers (different modes)
-- (TODO) manage version clashes at configure time
+- manage version clashes at configure time
 

@@ -18,7 +18,7 @@ Declaring Dependency
 
   .. code-block:: cmake
 
-    DependencyManager_Declare(<name> <gitRepository> [<contentOptions>...] [VERSION <versionRange>] ...)
+    DependencyManager_Declare(<name> <gitRepository> [VERSION <versionRange>...]  [<contentOptions>...])
 
   The ``DependencyManager_Declare()`` function is a wrapper over ``FetchContent_Declare()``
   with specialised functionality::
@@ -29,7 +29,7 @@ Declaring Dependency
   4. GIT_TAG must be stored in a file ``${DEPENDENCYMANAGER_BASE_DIR}/${name}_SHA1``
 
   The cached variable ``DEPENDENCYMANAGER_BASE_DIR`` is set to ``${CMAKE_SOURCE_DIR}/dependencies`` by default.
-  It should not be modified through out the configuration process.
+  It should not be modified in the middle of the configuration process.
 
   The content ``<name>`` must be supported by ``FetchContent_Declare()``.
   For version checking ``<name>`` must be the name given to top level call of ``project()`` in
@@ -99,9 +99,17 @@ include(FetchContent)
 set(DEPENDENCYMANAGER_BASE_DIR "${CMAKE_SOURCE_DIR}/dependencies" CACHE PATH
         "Directory in which to clone all dependencies, and where <name>_SHA1 files are stored.")
 option(DEPENDENCYMANAGER_HASH_UPDATE
-        "If ON, use commit of checked out dependency, else use commit from {NAME}_SHA1 file" OFF)
+        "If ON, use hash of checked out dependency, else use hash from {NAME}_SHA1 file" OFF)
 option(DEPENDENCYMANAGER_VERSION_ERROR
         "If ON, raises an error when incompatible dependency versions are found" ON)
+
+macro(__DependencyManager_STAMP_DIR)
+    set(STAMP_DIR "${DEPENDENCYMANAGER_BASE_DIR}/.cmake_stamp_dir")
+endmacro()
+
+macro(__DependencyManager_SHA1_FILE name)
+    set(SHA1_FILE "${DEPENDENCYMANAGER_BASE_DIR}/${name}_SHA1")
+endmacro()
 
 # Users expect _SHA1 to take priority
 #   - if a different version is checked-out,
@@ -109,82 +117,131 @@ option(DEPENDENCYMANAGER_VERSION_ERROR
 # Developers expect checked-out dependency to take priority
 #   - if a different version is checked-out,
 #     it should update the stored commit
-# Add an option:
-#   LIBCONFIG_UPDATE=ON/OFF
-#       - If ON, __DependencyManager_update_SHA1 is called in declared_dependency
-#         and the stored SHA1 is overwritten with current commit hash
-#         If SHA1 file does not exist already, the commit hash will be written
-#       - If OFF, __DependencyManager_update_SHA1 is not called
-function(__DependencyManager_update_SHA1 NAME SHA_FILE)
+function(__DependencyManager_update_SHA1 name)
     if (NOT DEPENDENCYMANAGER_HASH_UPDATE)
         return()
     endif ()
-    if (IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}")
+    __DependencyManager_SHA1_FILE(${name})
+    if (IS_DIRECTORY "${DEPENDENCYMANAGER_BASE_DIR}/${name}")
         find_package(Git REQUIRED)
         execute_process(
                 COMMAND "${GIT_EXECUTABLE}" rev-list --max-count=1 HEAD
-                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}"
+                WORKING_DIRECTORY "${DEPENDENCYMANAGER_BASE_DIR}/${name}"
                 RESULT_VARIABLE error_code
-                OUTPUT_VARIABLE head_sha
+                OUTPUT_VARIABLE head_sha1
                 OUTPUT_STRIP_TRAILING_WHITESPACE
         )
         if (error_code)
             message(FATAL_ERROR "Failed to get the hash for HEAD")
         endif ()
         set(GIT_TAG "")
-        if (EXISTS "${SHA_FILE}")
-            file(STRINGS "${SHA_FILE}" GIT_TAG)
+        if (EXISTS "${SHA1_FILE}")
+            file(STRINGS "${SHA1_FILE}" GIT_TAG)
         endif ()
         string(STRIP "${GIT_TAG}" GIT_TAG)
-        if (NOT "${GIT_TAG}" STREQUAL "${head_sha}")
-            message(STATUS "Updating commit for ${NAME} in file ${SHA_FILE}")
-            file(WRITE "${SHA_FILE}" ${head_sha})
+        if (NOT "${GIT_TAG}" STREQUAL "${head_sha1}")
+            message(STATUS "Updating commit for ${NAME} in file ${SHA1_FILE}")
+            file(WRITE "${SHA1_FILE}" ${head_sha1})
         endif ()
     endif ()
 endfunction()
 
-# Declare an external git-hosted library on which this project depends
-# The first parameter is a character string that will be used to generate file
-# and target names, and as a handle for a subsequent get_dependency() call.
-# The second parameter is the URL where the git repository can be found.
-# The node in the git repository is specified separately in the file
-# ${CMAKE_SOURCE_DIR}/dependencies/${NAME}_SHA1
-function(DependencyManager_Declare NAME URL)
-    set(_private_dependency_${NAME}_directory "${CMAKE_CURRENT_SOURCE_DIR}" CACHE INTERNAL "dependency directory for ${NAME}")
-    get_dependency_name(${NAME})
-    __DependencyManager_update_SHA1(${NAME} ${_SHA_file})
-    file(STRINGS "${_SHA_file}" GIT_TAG)
-    message(STATUS "Declare dependency NAME=${NAME} URL=${URL} TAG=${GIT_TAG} DEPENDENCY=${_dependency_name}")
+function(DependencyManager_Declare name GIT_REPOSITORY)
+    __DependencyManager_STAMP_DIR()
+    __DependencyManager_SHA1_FILE(${name})
+    __DependencyManager_update_SHA1(${name})
+
+    set(options "")
+    set(oneValueArgs "")
+    set(multiValueArgs VERSION)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    set(_DependencyManager_${PROJECT_NAME}_${name}_VERSION ${ARG_VERSION} CACHE INTERNAL
+            "Valid Version range of dependency ${name} for project ${PROJECT_NAME}")
+
+    file(STRINGS "${SHA1_FILE}" GIT_TAG)
+    string(STRIP "${GIT_TAG}" GIT_TAG)
+    message(STATUS "Declare dependency NAME=${name} GIT_REPOSITORY=${GIT_REPOSITORY} TAG=${GIT_TAG}")
+
     FetchContent_Declare(
-            ${_dependency_name}
-            SOURCE_DIR "${CMAKE_SOURCE_DIR}/dependencies/${NAME}"
-            STAMP_DIR "${CMAKE_SOURCE_DIR}/dependencies/.cmake_stamp_dir"
-            GIT_REPOSITORY ${URL}
+            ${name}
+            # List this first so they can be overwritten by our options
+            ${ARG_UNPARSED_ARGUMENTS}
+
+            SOURCE_DIR "${DEPENDENCYMANAGER_BASE_DIR}/${name}"
+            STAMP_DIR "${STAMP_DIR}"
+            GIT_REPOSITORY ${GIT_REPOSITORY}
             GIT_TAG ${GIT_TAG}
     )
 endfunction()
 
-# Load an external git-hosted library on which this project depends.
-# The first parameter is the name of the dependency, as passed previously to
-# DependencyManager_Declare().
-# A second parameter can be given, which if evaluating to true includes the
-# library in the cmake build via add_subdirectory(). If omitted, true is assumed.
-# lockfile should be in "${DEPENDENCYMANAGER_STAMP_DIR}/._private_dependencymanager_${name}-lockfile"
-function(DependencyManager_Populate name)
-    get_dependency_name(${name})
-    messagev("get_dependency(${name})")
-    FetchContent_GetProperties(${_dependency_name})
-    if (NOT ${_dependency_name}_POPULATED)
-        file(LOCK "${CMAKE_SOURCE_DIR}/dependencies/.${name}_lockfile" GUARD PROCESS TIMEOUT 1000)
-        FetchContent_Populate(${_dependency_name})
-        if (ARGV1 OR (NOT DEFINED ARGV1))
-            message("add_subdirectory() for get_dependency ${name}")
-            add_subdirectory(${${_dependency_name}_SOURCE_DIR} ${${_dependency_name}_BINARY_DIR} EXCLUDE_FROM_ALL)
+function(__DependencyManager_VersionCheck versionRange version noError)
+    set(compatible ON)
+    string(STRIP "${version}" version)
+    foreach (v IN LISTS versionRange)
+        string(STRIP "${v}" v)
+        if (NOT v)
+            continue()
         endif ()
-        file(LOCK "${CMAKE_SOURCE_DIR}/dependencies/.${name}_lockfile" RELEASE)
+        string(REGEX MATCH "^[=><]+" comp "${v}")
+        string(REGEX REPLACE "^[=><]+" "" v "${v}")
+        string(STRIP "${v}" v)
+        if (NOT comp)
+            string(COMPARE EQUAL "${version}" "${v}" compatible)
+        elseif (comp STREQUAL "=")
+            string(COMPARE EQUAL "${version}" "${v}" compatible)
+        elseif (comp STREQUAL ">")
+            string(COMPARE GREATER "${version}" "${v}" compatible)
+        elseif (comp STREQUAL ">=")
+            string(COMPARE GREATER_EQUAL "${version}" "${v}" compatible)
+        elseif (comp STREQUAL "<")
+            string(COMPARE LESS "${version}" "${v}" compatible)
+        elseif (comp STREQUAL "<=")
+            string(COMPARE LESS_EQUAL "${version}" "${v}" compatible)
+        else ()
+            message(FATAL_ERROR "Version check failed for versionCompare=${v} and currentVersion=${version}")
+        endif ()
+        if (NOT compatible)
+            break()
+        endif ()
+    endforeach ()
+    if (NOT compatible)
+        set(mess "Current version (${version}) is outside of required version range (${versionRange})")
+        if (noError)
+            message(WARNING "${mess}")
+        else ()
+            message(FATAL_ERROR "${mess}")
+        endif ()
+    endif ()
+endfunction()
+
+function(DependencyManager_Populate name)
+    __DependencyManager_STAMP_DIR()
+    set(lockfile "${STAMP_DIR}/._private_dependencymanager_${name}-lockfile")
+
+    set(options DO_NOT_MAKE_AVAILABLE NO_VERSION_ERROR)
+    set(oneValueArgs "")
+    set(multiValueArgs "")
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    messagev("DependencyManager_Populate(${name})")
+    FetchContent_GetProperties(${name})
+    string(TOLOWER "${name}" lcName)
+    if (NOT ${lcName}_POPULATED)
+        file(LOCK "${lockfile}" GUARD PROCESS TIMEOUT 1000)
+        FetchContent_Populate(${name})
+        if (NOT ARG_DO_NOT_MAKE_AVAILABLE)
+            message("add_subdirectory() for ${name}")
+            set(scopeVersion ${CMAKE_CURRENT_BINARY_DIR}/ScopeVersion_${name}.cmake)
+            file(WRITE ${scopeVersion} "set(${name}_VERSION \${${name}_VERSION) PARENT_SCOPE")
+            set(CMAKE_${name}_INCLUDE "${scopeVersion}")
+            add_subdirectory(${${lcName}_SOURCE_DIR} ${${lcName}_BINARY_DIR} EXCLUDE_FROM_ALL)
+            __DependencyManager_VersionCheck("${_DependencyManager_${PROJECT_NAME}_${name}_VERSION}" "${name}_VERSION"
+                    ${ARG_NO_VERSION_ERROR})
+        endif ()
+        file(LOCK "${lockfile}" RELEASE)
     endif ()
     foreach (s SOURCE_DIR BINARY_DIR POPULATED)
-        set(${_dependency_name}_${s} "${${_dependency_name}_${s}}" PARENT_SCOPE)
+        set(${lcName}_${s} "${${lcName}_${s}}" PARENT_SCOPE)
     endforeach ()
 endfunction()
 
