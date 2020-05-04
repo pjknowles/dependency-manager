@@ -28,10 +28,12 @@ with specialised functionality
 1. Source code is downloaded into ``${DEPENDENCYMANAGER_BASE_DIR}/<name>``
 2. ``STAMP_DIR`` is in source, by default at ``${DEPENDENCYMANAGER_BASE_DIR}/.cmake_stamp_dir``
 3. Only Git repositories are supported
-4. Commit hash of dependency must be stored in a file ``${DEPENDENCYMANAGER_BASE_DIR}/${name}_SHA1``
+4. Commit hash of dependency must be stored in a file ``${name}_SHA1`` in directory from which
+   :cmake:command:`DependencyManager_Declare()` is called
 
-The cached variable ``DEPENDENCYMANAGER_BASE_DIR`` is set to ``${CMAKE_SOURCE_DIR}/dependencies`` by default.
-It should not be modified in the middle of the configuration process.
+The cached variable ``DEPENDENCYMANAGER_BASE_DIR`` is the top level location where source is cloned.
+It is set to ``${CMAKE_SOURCE_DIR}/dependencies`` by default and should not be modified in the middle
+of the configuration process.
 
 The content ``<name>`` must be supported by `FetchContent_Declare()`_.
 For version checking ``<name>`` must be the name given to top level call of ``project()`` in
@@ -112,7 +114,7 @@ macro(__DependencyManager_STAMP_DIR)
 endmacro()
 
 macro(__DependencyManager_SHA1_FILE name)
-    set(SHA1_FILE "${DEPENDENCYMANAGER_BASE_DIR}/${name}_SHA1")
+    set(SHA1_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${name}_SHA1")
 endmacro()
 
 # Users expect _SHA1 to take priority
@@ -126,11 +128,11 @@ function(__DependencyManager_update_SHA1 name)
         return()
     endif ()
     __DependencyManager_SHA1_FILE(${name})
-    if (IS_DIRECTORY "${DEPENDENCYMANAGER_BASE_DIR}/${name}")
+    if (IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${name}")
         find_package(Git REQUIRED)
         execute_process(
                 COMMAND "${GIT_EXECUTABLE}" rev-list --max-count=1 HEAD
-                WORKING_DIRECTORY "${DEPENDENCYMANAGER_BASE_DIR}/${name}"
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${name}"
                 RESULT_VARIABLE error_code
                 OUTPUT_VARIABLE head_sha1
                 OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -168,6 +170,7 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
 
     FetchContent_Declare(
             ${name}
+
             # List this first so they can be overwritten by our options
             ${ARG_UNPARSED_ARGUMENTS}
 
@@ -202,7 +205,7 @@ function(__DependencyManager_VersionCheck versionRange version noError)
         elseif (comp STREQUAL "<=")
             string(COMPARE LESS_EQUAL "${version}" "${v}" compatible)
         else ()
-            message(FATAL_ERROR "Version check failed for versionCompare=${v} and currentVersion=${version}")
+            message(FATAL_ERROR "Version check failed for versionCompare=${v}, currentVersion=${version} and comparison operator is ${comp}")
         endif ()
         if (NOT compatible)
             break()
@@ -227,7 +230,7 @@ function(DependencyManager_Populate name)
     set(multiValueArgs "")
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    messagev("DependencyManager_Populate(${name})")
+#    message(STATUS "DependencyManager_Populate(${name})")
     FetchContent_GetProperties(${name})
     string(TOLOWER "${name}" lcName)
     if (NOT ${lcName}_POPULATED)
@@ -252,12 +255,4 @@ endfunction()
 function(get_dependency_name dep)
     set(_dependency_name _private_dep_${dep} PARENT_SCOPE)
     set(_SHA_file "${_private_dependency_${NAME}_directory}/${dep}_SHA1" PARENT_SCOPE)
-endfunction()
-
-function(messagev MESSAGE)
-    if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
-        message(VERBOSE "${MESSAGE}")
-    else ()
-        message(STATUS "${MESSAGE}")
-    endif ()
 endfunction()
