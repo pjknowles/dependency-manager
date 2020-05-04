@@ -79,6 +79,7 @@ If subdirectory gets added, a version check is performed. When requested version
 version that took priority at declaration stage (i.e. duplicate dependencies) the default behaviour is for
 a ``FATAL_ERROR`` to get raised. If ``NO_VERSION_ERROR`` is set, than a ``WARNING`` is printed instead
 and configuration continues.
+``${name}_VERSION`` is also brought to ``PARENT_SCOPE``.
 
 Note, that file locking is used which acts as a mutex when multiple configurations are run simultaneously.
 The file lock files are stored in ``STAMP_DIR``.
@@ -244,6 +245,7 @@ function(DependencyManager_Populate name)
             add_subdirectory(${${lcName}_SOURCE_DIR} ${${lcName}_BINARY_DIR} EXCLUDE_FROM_ALL)
             __DependencyManager_VersionCheck("${_DependencyManager_${PROJECT_NAME}_${name}_VERSION}" "${name}_VERSION"
                     ${ARG_NO_VERSION_ERROR})
+            set(${name}_VERSION "${name}_VERSION" PARENT_SCOPE)
         endif ()
         file(LOCK "${lockfile}" RELEASE)
     endif ()
