@@ -153,7 +153,52 @@ function(__DependencyManager_update_SHA1 name)
     endif ()
 endfunction()
 
+# Each dependency gets a global property for storing details like its version number
+# and desired version range from each caller of DependencyManager_Declare()
+# Properties must be passed as Option, single value keyword and multi-value keyword, see cmake_parse_arguments
+function(__DependencyManager_declareDependencyProperty name)
+    string(TOLOWER ${name} lcName)
+    set(propertyName "__DependencyManager_${lcName}_savedDetails")
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    if (NOT alreadyDefined)
+        define_property(GLOBAL PROPERTY ${propertyName}
+                BRIEF_DOCS "Details of dependency ${name}"
+                FULL_DOCS "Details of dependency ${name}"
+                )
+    endif ()
+endfunction()
+
+# Append to a global dependency property.
+# If it was not previously declared, than declare it first
+function(__DependencyManager_appendDependencyProperty name)
+    string(TOLOWER ${name} lcName)
+    set(propertyName "__DependencyManager_${lcName}_savedDetails")
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    if (NOT alreadyDefined)
+        __DependencyManager_declareDependencyProperty(${name})
+    endif ()
+    set_property(GLOBAL APPEND PROPERTY ${propertyName} ${ARGN})
+endfunction()
+
+# Extract stored arguments from previously defined property
+function(__DependencyManager_getDependencyProperty name prefix options oneValueArgs multiValueArgs)
+    string(TOLOWER ${name} lcName)
+    set(propertyName "__DependencyManager_${lcName}_savedDetails")
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    if (NOT alreadyDefined)
+        message(FATAL_ERROR "trying to get a property that is not yet defined: ${propertyName}")
+    endif ()
+    get_property(propertyValue GLOBAL PROPERTY ${propertyName})
+    cmake_parse_arguments("${prefix}" "${options}" "${oneValueArgs}" "${multiValueArgs}" ${propertyValue})
+    foreach (var IN LISTS options oneValueArgs multiValueArgs)
+        if (DEFINED ${prefix}_${var})
+            set(${prefix}_${var} "${${prefix}_${var}}" PARENT_SCOPE)
+        endif ()
+    endforeach ()
+endfunction()
+
 function(DependencyManager_Declare name GIT_REPOSITORY)
+    string(TOLOWER "${name}" lcName)
     __DependencyManager_STAMP_DIR()
     __DependencyManager_SHA1_FILE(${name})
     __DependencyManager_update_SHA1(${name})
@@ -162,12 +207,13 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     set(oneValueArgs "")
     set(multiValueArgs VERSION)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    set(_DependencyManager_${PROJECT_NAME}_${name}_VERSION ${ARG_VERSION} CACHE INTERNAL
-            "Valid Version range of dependency ${name} for project ${PROJECT_NAME}")
+
+    __DependencyManager_appendDependencyProperty(${lcName}
+            ${PROJECT_NAME}_${lcName}_VersionRange "${ARG_VERSION}")
 
     file(STRINGS "${SHA1_FILE}" GIT_TAG)
     string(STRIP "${GIT_TAG}" GIT_TAG)
-    message(STATUS "Declare dependency NAME=${name} GIT_REPOSITORY=${GIT_REPOSITORY} TAG=${GIT_TAG}")
+    message(STATUS "Declare dependency: NAME=${name} GIT_REPOSITORY=${GIT_REPOSITORY} TAG=${GIT_TAG}")
 
     FetchContent_Declare(
             ${name}
@@ -182,6 +228,29 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     )
 endfunction()
 
+function(__DependencyManager_VersionCompare version1 comp version2 out)
+    if (NOT comp)
+        set(comparisonOperator VERSION_EQUAL)
+    elseif (comp STREQUAL "=")
+        set(comparisonOperator VERSION_EQUAL)
+    elseif (comp STREQUAL ">")
+        set(comparisonOperator VERSION_GREATER)
+    elseif (comp STREQUAL ">=")
+        set(comparisonOperator VERSION_GREATER_EQUAL)
+    elseif (comp STREQUAL "<")
+        set(comparisonOperator VERSION_LESS)
+    elseif (comp STREQUAL "<=")
+        set(comparisonOperator VERSION_LESS_EQUAL)
+    else ()
+        message(FATAL_ERROR "Version check failed for ${version1} ${comp} ${version2}")
+    endif ()
+    if (version1 ${comparisonOperator} version2)
+        set(${out} ON PARENT_SCOPE)
+    else ()
+        set(${out} OFF PARENT_SCOPE)
+    endif ()
+endfunction()
+
 function(__DependencyManager_VersionCheck versionRange version noError)
     set(compatible ON)
     string(STRIP "${version}" version)
@@ -193,21 +262,7 @@ function(__DependencyManager_VersionCheck versionRange version noError)
         string(REGEX MATCH "^[=><]+" comp "${v}")
         string(REGEX REPLACE "^[=><]+" "" v "${v}")
         string(STRIP "${v}" v)
-        if (NOT comp)
-            string(COMPARE EQUAL "${version}" "${v}" compatible)
-        elseif (comp STREQUAL "=")
-            string(COMPARE EQUAL "${version}" "${v}" compatible)
-        elseif (comp STREQUAL ">")
-            string(COMPARE GREATER "${version}" "${v}" compatible)
-        elseif (comp STREQUAL ">=")
-            string(COMPARE GREATER_EQUAL "${version}" "${v}" compatible)
-        elseif (comp STREQUAL "<")
-            string(COMPARE LESS "${version}" "${v}" compatible)
-        elseif (comp STREQUAL "<=")
-            string(COMPARE LESS_EQUAL "${version}" "${v}" compatible)
-        else ()
-            message(FATAL_ERROR "Version check failed for versionCompare=${v}, currentVersion=${version} and comparison operator is ${comp}")
-        endif ()
+        __DependencyManager_VersionCompare("${version}" "${comp}" "${v}" compatible)
         if (NOT compatible)
             break()
         endif ()
@@ -231,30 +286,42 @@ function(DependencyManager_Populate name)
     set(multiValueArgs "")
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-#    message(STATUS "DependencyManager_Populate(${name})")
     FetchContent_GetProperties(${name})
     string(TOLOWER "${name}" lcName)
     if (NOT ${lcName}_POPULATED)
         file(LOCK "${lockfile}" GUARD PROCESS TIMEOUT 1000)
         FetchContent_Populate(${name})
         if (NOT ARG_DO_NOT_MAKE_AVAILABLE)
-            message("add_subdirectory() for ${name}")
+            message(STATUS "DependencyManager_Populate(${name}) and add_subdirectory()")
             set(scopeVersion ${CMAKE_CURRENT_BINARY_DIR}/ScopeVersion_${name}.cmake)
-            file(WRITE ${scopeVersion} "set(${name}_VERSION \${${name}_VERSION) PARENT_SCOPE")
-            set(CMAKE_${name}_INCLUDE "${scopeVersion}")
+            file(WRITE ${scopeVersion} "set(${name}_VERSION \${${name}_VERSION} PARENT_SCOPE)")
+            set(CMAKE_PROJECT_${name}_INCLUDE "${scopeVersion}")
             add_subdirectory(${${lcName}_SOURCE_DIR} ${${lcName}_BINARY_DIR} EXCLUDE_FROM_ALL)
-            __DependencyManager_VersionCheck("${_DependencyManager_${PROJECT_NAME}_${name}_VERSION}" "${name}_VERSION"
-                    ${ARG_NO_VERSION_ERROR})
-            set(${name}_VERSION "${name}_VERSION" PARENT_SCOPE)
+            __DependencyManager_appendDependencyProperty(${lcName} ${name}_VERSION "${${name}_VERSION}")
         endif ()
         file(LOCK "${lockfile}" RELEASE)
     endif ()
+
+    __DependencyManager_getDependencyProperty(
+            ${lcName}
+            prop
+            ""
+            "${name}_VERSION"
+            "${PROJECT_NAME}_${lcName}_VersionRange"
+    )
+    if (DEFINED prop_${name}_VERSION AND DEFINED prop_${PROJECT_NAME}_${lcName}_VersionRange)
+        __DependencyManager_VersionCheck(
+                "${prop_${PROJECT_NAME}_${name}_VersionRange}"
+                "${prop_${name}_VERSION}"
+                ${ARG_NO_VERSION_ERROR}
+        )
+        set(${name}_VERSION "${prop_${name}_VERSION}" PARENT_SCOPE)
+    else ()
+        message(WARNING "could not get version properties for dependency ${name}. ${prop_${name}_VERSION} and ${prop_${PROJECT_NAME}_${lcName}_VersionRange}")
+    endif ()
+
     foreach (s SOURCE_DIR BINARY_DIR POPULATED)
         set(${lcName}_${s} "${${lcName}_${s}}" PARENT_SCOPE)
     endforeach ()
 endfunction()
 
-function(get_dependency_name dep)
-    set(_dependency_name _private_dep_${dep} PARENT_SCOPE)
-    set(_SHA_file "${_private_dependency_${NAME}_directory}/${dep}_SHA1" PARENT_SCOPE)
-endfunction()
