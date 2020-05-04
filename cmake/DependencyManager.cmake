@@ -311,7 +311,7 @@ function(DependencyManager_Populate name)
     )
     if (DEFINED prop_${name}_VERSION AND DEFINED prop_${PROJECT_NAME}_${lcName}_VersionRange)
         __DependencyManager_VersionCheck(
-                "${prop_${PROJECT_NAME}_${name}_VersionRange}"
+                "${prop_${PROJECT_NAME}_${lcName}_VersionRange}"
                 "${prop_${name}_VERSION}"
                 ${ARG_NO_VERSION_ERROR}
         )
