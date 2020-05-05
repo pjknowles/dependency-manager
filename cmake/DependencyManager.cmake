@@ -285,6 +285,11 @@ function(DependencyManager_Populate name)
     set(oneValueArgs "")
     set(multiValueArgs "")
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    if(DEFINED ARG_NO_VERSION_ERROR)
+        set(versionError OFF)
+    else()
+        set(versionError ${DEPENDENCYMANAGER_VERSION_ERROR})
+    endif()
 
     FetchContent_GetProperties(${name})
     string(TOLOWER "${name}" lcName)
@@ -313,7 +318,7 @@ function(DependencyManager_Populate name)
         __DependencyManager_VersionCheck(
                 "${prop_${PROJECT_NAME}_${lcName}_VersionRange}"
                 "${prop_${name}_VERSION}"
-                ${ARG_NO_VERSION_ERROR}
+                ${versionError}
         )
         set(${name}_VERSION "${prop_${name}_VERSION}" PARENT_SCOPE)
     else ()
