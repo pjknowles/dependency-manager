@@ -20,7 +20,8 @@ Declaring Dependency
 
 .. code-block:: cmake
 
-    DependencyManager_Declare(<name> <gitRepository> [VERSION <versionRange>...]  [<contentOptions>...])
+    DependencyManager_Declare(<name> <gitRepository> [VERSION <versionRange>...] [PARENT_NAME <parentName>]
+                              [<contentOptions>...])
 
 The :cmake:command:`DependencyManager_Declare()` function is a wrapper over `FetchContent_Declare()`_
 with specialised functionality
@@ -58,6 +59,11 @@ A list of version specifications can be passed.
 For example, ``>=1.2.3;<1.8`` means from version ``1.2.3`` up to but not including version ``1.8``;
 ``>1.2.3`` is any version greater than ``1.2.3``; ``<=1.8`` any version up to and including ``1.8``;
 and ``1.2.3`` requests an exact match.
+
+To register the nodal structure of dependency tree name of the parent node is necessary.
+By default it is the name of the most recently called ``project()``.
+In case there are multiple ``project()`` calls parent name can be specified explicitly with option ``PARENT_NAME``.
+
 
 Populating Dependency
 ^^^^^^^^^^^^^^^^^^^^^
@@ -99,6 +105,107 @@ currently checked out hash before the update stage, making sure that the work is
 
 .. _FetchContent_Declare(): https://cmake.org/cmake/help/latest/module/FetchContent.html#command:fetchcontent_declare
 .. _FetchContent_Populate(): https://cmake.org/cmake/help/latest/module/FetchContent.html#command:fetchcontent_populate
+
+
+Graph of Dependency Tree
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. cmake:command:: DependencyManager_DotGraph
+
+.. code-block:: cmake
+
+    DependencyManager_DotGraph([NAME <name>])
+
+Writes a dot file with the current structure of dependency tree. It can be compiled to a graphics using graphviz.
+By default, the dot file is written to ``${CMAKE_CURRENT_BINARY_DIR}/dependencyManager_dotGraph.dot``.
+This can be changed by passing ``<name>``, which can be an absolute path or
+a path relative to ``${CMAKE_CURRENT_BINARY_DIR}``
+
+(For Developers) Structure of the Dependency Tree
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To correctly resolve valid versions and provide useful summaries we need to store
+the structure of the dependency tree.
+
+Each ``node`` has a unique ``nodeID``, represented with a dot separated list of integers ``i1.i2.i3.i4. ...``,
+where ``i1`` is the position of root project (there might be multiple roots at top level),
+``i2`` is the position among children of ``i1`` at level 2, etc.
+For example ``A->{B->{C}, C->{E}, D->{E}}`` becomes ``1->{1.1->{1.1.1}, 1.2->{1.2.1}, 1.3->{1.3.1}}``
+
+A ``node`` contains the following features:
+
+1. ``NAME`` is name of the project on declaration
+2. ``PARENT_NAME`` is name of the parent project on declaration
+3. ``CHILDREN`` is an ordered set of nodeID's for its children
+4. ``GIT_URL`` is the Git url to repository
+5. ``GIT_TAG`` is the commit hash stored in relevant ``<name>_SHA1`` file
+6. ``VERSION_RANGE`` is the range of required versions
+
+During declaration stage we register each node and add it as a child of a parent node.
+If a child node by that name already exists, than its content is overwritten and
+a warning about duplicate node gets printed.
+
+By design, nodes that can have children (parent nodes) have a unique name.
+Parent nodes are registered when they are first populated and made available.
+We keep lists of parent node names, node ID's, and versions.
+
+During population stage, on the first call that makes project available,
+we register populated node as a parent.
+Version of populated node is extracted from a global property and used to
+check that it satisfies ``VERSION_RANGE`` in stored node features.
+
+During declaration stage we populate a list of ``nodeID`` strings and declare
+a property under ``nodeID`` name with the relevant node features.
+We need to know current nodeID for storage and to increment it.
+If we know the parent nodeID we can use the list of declared nodeID's to get all
+the relevant children. A sibling with the greatest position is the current nodeID.
+
+During population we update a property with the list of versions for each dependency.
+
+How do we get the parent nodeID?
+The dependency tree is reduced to a flat list, so while there are multiple declared nodes
+by the same name, population is initiated by a node uniquely identified by its name.
+That is, parent nodes form a set.
+We need to store their ``nodeID`` as well as their ``VERSION``.
+
+This is the complete definition of declared dependency tree together with the versions
+of cloned dependencies. It can be used to check the version and write a graphical
+representation of the tree.
+
+Global Properties:
+
+1. ``__DependencyManager_property_nodeIDs`` -- list of nodeID's
+2. ``__DependencyManager_property_nodeFeatures_${nodeID}`` -- store node features, one for each node
+3. ``__DependencyManager_property_parentNodes`` -- multi-value-arguments
+        ``NAME`` - list of parent names,
+        ``NODE_ID`` - list of corresponding nodeIDs,
+        ``VERSION`` - list of corresponding versions
+
+Useful Operations:
+
+1. ``__DependencyManager_parentNodeID(<parentName> <out>)``
+        Return nodeID of node with ``NAME`` <parentName>
+
+2. ``__DependencyManager_childrenNodeIDs(<parentName> <out>)``
+        Return nodeID's of all children of project <parentName>
+
+3. ``__DependencyManager_nodeNames(<nodeIDs> <out>)``
+        Return a list of node names for corresponding ID's
+
+4. ``__DependencyManager_currentNodeID(<parentName> <name> <out> <duplicate>)``
+        Return nodeID for current declaration and whether it is a duplicate,
+        in which case nodeID is already registered, nodeFeatures will be overwritten and
+        nodeIDs don't need to be updated.
+
+5. ``__DependencyManager_storeNode(<nodeID> <name> <parentName> <versionRange>)``
+        Store node features, if nodeID is already registered than update node features with new values and return.
+        If not a duplicate, update list of nodeIDs and add itself as a child in parent node features.
+
+6. ``__DependencyManager_updateParentNodes(<nodeID> <name> <parentName> <versionRange>)``
+
+
+
+
+
 #]=======================================================================]
 
 include(FetchContent)
@@ -204,9 +311,13 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     __DependencyManager_update_SHA1(${name})
 
     set(options "")
-    set(oneValueArgs "")
+    set(oneValueArgs "PARENT_NAME")
     set(multiValueArgs VERSION)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    set(parentName "${PROJECT_NAME}")
+    if(DEFINED ARG_PARENT_NAME)
+        set(parentName "${ARG_PARENT_NAME}")
+    endif()
 
     __DependencyManager_appendDependencyProperty(${lcName}
             ${PROJECT_NAME}_${lcName}_VersionRange "${ARG_VERSION}")
