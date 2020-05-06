@@ -20,7 +20,7 @@ Declaring Dependency
 
 .. code-block:: cmake
 
-    DependencyManager_Declare(<name> <gitRepository> [VERSION <versionRange>...] [PARENT_NAME <parentName>]
+    DependencyManager_Declare(<name> <gitRepository> [VERSION_RANGE <versionRange>] [PARENT_NAME <parentName>]
                               [<contentOptions>...])
 
 The :cmake:command:`DependencyManager_Declare()` function is a wrapper over `FetchContent_Declare()`_
@@ -49,19 +49,16 @@ specified separately.
 The value of ``GIT_TAG`` passed to ``FetchContent`` must be a commit hash stored in
 ``${DEPENDENCIES_DIR}/<name>_SHA1`` file.
 
-The ``<versionRange>`` specifies a list of compatible versions. Version of a dependency is read from
-the ``${<name>_VERSION}`` variable which is automatically set when VERSION is specified in the ``project()`` call.
-When there are duplicate dependencies ``<versionRange>`` is checked and if an already populated dependency
-is outside that range an error is raised during configuration. Version must be specified as
-``<major>.[<minor>[.<patch>[.<tweak>]]]`` preceded by  ``<``, ``<=``, ``>``, ``>=`` to specify boundaries of the
+``<versionRange>`` is a list of compatible versions using comma ``,`` as a separator (NOT semicolon ``;``).
+Version must be specified as ``<major>.[<minor>[.<patch>[.<tweak>]]]``
+with any missing element assumed zero (consistent with ``VERSION`` comparison operators in ``if()`` statement).
+It can be preceded by  relational operators ``<``, ``<=``, ``>``, ``>=`` to specify boundaries of the
 range. If no relational operators are given that an exact match is requested.
-A list of version specifications can be passed.
-For example, ``>=1.2.3;<1.8`` means from version ``1.2.3`` up to but not including version ``1.8``;
-``>1.2.3`` is any version greater than ``1.2.3``; ``<=1.8`` any version up to and including ``1.8``;
-and ``1.2.3`` requests an exact match.
+For example, ``VERSION_RANGE ">=1.2.3,<1.8"`` means from version ``1.2.3`` up to but not including version ``1.8.0``.
 
-To register the nodal structure of dependency tree name of the parent node is necessary.
-By default it is the name of the most recently called ``project()``.
+
+Name of the parent node, ``<parentName>``, is needed to construct the dependency tree.
+By default it is the name of the most recently called ``project()``, i.e. ``${PROJECT_NAME}``.
 In case there are multiple ``project()`` calls parent name can be specified explicitly with option ``PARENT_NAME``.
 
 
@@ -72,20 +69,31 @@ Populating Dependency
 
 .. code-block:: cmake
 
-    DependencyManager_Populate(<name> [DO_NOT_MAKE_AVAILABLE] [NO_VERSION_ERROR])
+    DependencyManager_Populate(<name> [PARENT_NAME <parentName>] [DO_NOT_MAKE_AVAILABLE] [NO_VERSION_ERROR])
 
 This is a again a wrapper over `FetchContent_Populate()`_.
-A call to :cmake:command:`DependencyManager_Declare()` must have been made first.
+Dependency being populated must have been declared sometime before.
 
-``<name>`` must be the same as in previous call to  :cmake:command:`DependencyManager_Populate()`.
+``<name>`` must be the same as in previous call to  :cmake:command:`DependencyManager_Declare()`.
+
+``<parentName>`` is the name of the parent node. By default, it is the last called ``project()``.
+It must be the same value as in previous call to  :cmake:command:`DependencyManager_Declare()`.
+Even if ``PARENT_NAME`` was not specified during declaration, the default values might differ
+if a different ``project()`` call was made at the same scope.
 
 After populating the content ``add_subdirectory()`` is called by default, unless ``DO_NOT_MAKE_AVAILABLE`` is set.
 
-If subdirectory gets added, a version check is performed. When requested version is not compatible with the
-version that took priority at declaration stage (i.e. duplicate dependencies) the default behaviour is for
-a ``FATAL_ERROR`` to get raised. If ``NO_VERSION_ERROR`` is set, than a ``WARNING`` is printed instead
-and configuration continues.
-``${name}_VERSION`` is also brought to ``PARENT_SCOPE``.
+During population stage .
+When there are duplicate dependencies ``<versionRange>`` is checked and if an already populated dependency
+is outside that range an error is raised during configuration.
+
+If subdirectory gets added, a version check is performed.
+Version of a dependency is read from the ``${<name>_VERSION}`` variable which is
+automatically set when ``VERSION`` is specified in the ``project()`` call.
+If cloned version is not compatible with ``VERSION_RANGE`` specified in :cmake:command:`DependencyManager_Populate()`
+than an error gets raised and build configuration stops.
+With option ``NO_VERSION_ERROR`` only a warning is printed and configuration continues.
+``${name}_VERSION`` is also brought up to ``PARENT_SCOPE``.
 
 Note, that file locking is used which acts as a mutex when multiple configurations are run simultaneously.
 The file lock files are stored in ``STAMP_DIR``.
@@ -136,7 +144,7 @@ A ``node`` contains the following features:
 1. ``NAME`` is name of the project on declaration
 2. ``PARENT_NAME`` is name of the parent project on declaration
 3. ``CHILDREN`` is an ordered set of nodeID's for its children
-4. ``GIT_URL`` is the Git url to repository
+4. ``GIT_REPOSITORY`` is the Git url to repository
 5. ``GIT_TAG`` is the commit hash stored in relevant ``<name>_SHA1`` file
 6. ``VERSION_RANGE`` is the range of required versions
 
@@ -201,11 +209,6 @@ Useful Operations:
         If not a duplicate, update list of nodeIDs and add itself as a child in parent node features.
 
 6. ``__DependencyManager_updateParentNodes(<nodeID> <name> <parentName> <versionRange>)``
-
-
-
-
-
 #]=======================================================================]
 
 include(FetchContent)
@@ -224,6 +227,169 @@ endmacro()
 macro(__DependencyManager_SHA1_FILE name)
     set(SHA1_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${name}_SHA1")
 endmacro()
+
+# Store name, nodeID and version of a new parent node
+function(__DependencyManager_updateParentNodes name nodeID version)
+    set(propertyName __DependencyManager_property_parentNodes)
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    if (NOT alreadyDefined)
+        define_property(GLOBAL PROPERTY ${propertyName}
+                BRIEF_DOCS "Stores NAME, NODE_ID and VERSION of each parent node as a multi-value argument"
+                FULL_DOCS "Stores NAME, NODE_ID and VERSION of each parent node as a multi-value argument"
+                )
+    endif ()
+    get_property(propertyValue GLOBAL PROPERTY ${propertyName})
+    cmake_parse_arguments(prop "" "" "NAME;NODE_ID;VERSION" ${propertyValue})
+    set(nameList NAME "${prop_NAME}" "${name}")
+    set(nodeIDList NODE_ID "${prop_NODE_ID}" "${nodeID}")
+    set(versionList VERSION "${prop_VERSION}" "${version}")
+    set(nameSet "${nameList}")
+    set(nodeIDSet "${nodeIDList}")
+    list(REMOVE_DUPLICATES nameSet)
+    list(REMOVE_DUPLICATES nodeIDSet)
+    list(LENGTH nameList l1)
+    list(LENGTH nameSet s1)
+    list(LENGTH nodeIDList l2)
+    list(LENGTH nodeIDSet s2)
+    if ((s1 LESS l1) OR (s2 LESS l2))
+        message(FATAL_ERROR
+                "Attempting to add a duplicate parent node: name=${name}, nodeID=${nodeID}, version=${version}")
+    endif ()
+    set_property(GLOBAL APPEND PROPERTY ${propertyName} "${nameList};${nodeIDList};${versionList}")
+endfunction()
+
+# Given a name of the parent returns parent nodeID
+# Sets: ${prefix}_nodeID, ${prefix}_version
+#TODO generalise to multiple root nodes
+function(__DependencyManager_getParentNodeInfo prefix name)
+    message("__DependencyManager_getParentNodeInfo(${prefix} ${name}) ")
+    set(propertyName __DependencyManager_property_parentNodes)
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    if (NOT alreadyDefined)
+        message("!creating parent nodes")
+        __DependencyManager_updateParentNodes("${name}" "1" "${CMAKE_PROJECT_VERSION}")
+    endif ()
+    get_property(propertyValue GLOBAL PROPERTY ${propertyName})
+    cmake_parse_arguments(prop "" "" "NAME;NODE_ID;VERSION" ${propertyValue})
+    list(FIND prop_NAME "${name}" i)
+    if (i EQUAL -1)
+        message(FATAL_ERROR "Searching for a parent node that was not registered: name=${name}")
+    endif ()
+    list(GET prop_NODE_ID ${i} ${prefix}_nodeID)
+    list(GET prop_VERSION ${i} ${prefix}_VERSION)
+    set(${prefix}_nodeID "${${prefix}_nodeID}" PARENT_SCOPE)
+    set(${prefix}_version "${${prefix}_VERSION}" PARENT_SCOPE)
+    message("${prefix}_nodeID=${${prefix}_nodeID}")
+    message("${prefix}_version=${${prefix}_VERSION}")
+endfunction()
+
+# return node features
+# If nodeID is 1, than this is a root node and it gets created empty on the first call
+function(__DependencyManager_getNodeFeatures prefix nodeID)
+    message("__DependencyManager_getNodeFeatures(${prefix} ${nodeID})")
+    set(propertyName __DependencyManager_property_nodeFeatures_${nodeID})
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    # create a root node
+    if (NOT alreadyDefined)
+        if (nodeID EQUAL 1)
+            message("creating root node")
+            define_property(GLOBAL PROPERTY ${propertyName}
+                    BRIEF_DOCS "Stores NAME, PARENT_NAME, CHILDREN, GIT_REPOSITORY, GIT_TAG, VERSION_RANGE of each node"
+                    FULL_DOCS "Stores NAME, PARENT_NAME, CHILDREN, GIT_REPOSITORY, GIT_TAG, VERSION_RANGE of each node"
+                    )
+            set_property(GLOBAL PROPERTY ${propertyName}
+                    "NAME;${CMAKE_PROJECT_NAME};PARENT_NAME;;CHILDREN;;GIT_REPOSITORY;;GIT_TAG;;VERSION_RANGE;")
+        else ()
+            message(FATAL_ERROR "Searching for a node that was not registered: nodeID=${nodeID}")
+        endif ()
+    endif ()
+    get_property(propertyValue GLOBAL PROPERTY ${propertyName})
+    cmake_parse_arguments(prop
+            "" "NAME;PARENT_NAME;GIT_REPOSITORY;GIT_TAG;VERSION_RANGE"
+            "CHILDREN" ${propertyValue})
+    set(${prefix}_name "${prop_NAME}" PARENT_SCOPE)
+    set(${prefix}_parentName "${prop_PARENT_NAME}" PARENT_SCOPE)
+    set(${prefix}_gitRepository "${prop_GIT_REPOSITORY}" PARENT_SCOPE)
+    set(${prefix}_gitTag "${prop_GIT_TAG}" PARENT_SCOPE)
+    set(${prefix}_versionRange "${prop_VERSION_RANGE}" PARENT_SCOPE)
+    set(${prefix}_children "${prop_CHILDREN}" PARENT_SCOPE)
+    message("${prefix}_name=${prop_NAME}")
+    message("${prefix}_parentName=${prop_PARENT_NAME}")
+    message("${prefix}_gitRepository=${prop_GIT_REPOSITORY}")
+    message("${prefix}_gitTag=${prop_GIT_TAG}")
+    message("${prefix}_versionRange=${prop_VERSION_RANGE}")
+    message("${prefix}_children=${prop_CHILDREN}")
+endfunction()
+
+# appends a child to a parent node
+function(__DependencyManager_addChild parentName child_nodeID)
+    __DependencyManager_getParentNodeInfo(parent ${parentName})
+    set(propertyName __DependencyManager_property_nodeFeatures_${parent_nodeID})
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    if (NOT alreadyDefined)
+        message(FATAL_ERROR "Searching for a node that was not registered: nodeID=${parent_nodeID}, name=${parentName}")
+    endif ()
+    get_property(propertyValue GLOBAL PROPERTY ${propertyName})
+    cmake_parse_arguments(prop
+            "" "NAME;PARENT_NAME;GIT_REPOSITORY;GIT_TAG;VERSION_RANGE"
+            "CHILDREN" ${propertyValue})
+    set(property NAME "${prop_NAME}" PARENT_NAME "${prop_PARENT_NAME}" CHILDREN "${prop_CHILDREN};${child_nodeID}"
+            GIT_REPOSITORY "${prop_GIT_REPOSITORY}" GIT_TAG "${prop_GIT_TAG}" VERSION_RANGE "${prop_VERSION_RANGE}")
+    set_property(GLOBAL PROPERTY ${propertyName} ${property})
+endfunction()
+
+# Deduces the current nodeID by looking at the children of parent node
+function(__DependencyManager_currentNodeID prefix name parentName)
+    message("__DependencyManager_currentNodeID(${prefix} ${name} ${parentName})")
+    __DependencyManager_getParentNodeInfo(parent ${parentName})
+    __DependencyManager_getNodeFeatures("" "${parent_nodeID}")
+    set(duplicate FALSE)
+    if (NOT _children)
+        set(currentNodeID "${parent_nodeID}.1")
+    else ()
+        # if any of the children have the same name, use their nodeID and mark them as duplicates
+        foreach (id IN LISTS _children)
+            __DependencyManager_getNodeFeatures("child" "${id}")
+            if (${name} STREQUAL ${child_name})
+                set(duplicate TRUE)
+                set(currentNodeID "${id}")
+                break()
+            endif ()
+        endforeach ()
+        # otherwise increment the last child's nodeID and use it as current
+        if (NOT duplicate)
+            list(GET _children -1 id)
+            string(REPLACE "." ";" idList ${id})
+            list(POP_BACK idList i)
+            math(EXPR i "${i}+1")
+            string(REPLACE ";" "." currentNodeID "${idList};${i}")
+        endif ()
+    endif ()
+    set(${prefix}_duplicate "${duplicate}" PARENT_SCOPE)
+    set(${prefix}_nodeID "${currentNodeID}" PARENT_SCOPE)
+endfunction()
+
+# Store node features, if nodeID is already registered than update node features with new values and return.
+# If not a duplicate, update list of nodeIDs and add itself as a child in parent node features.
+function(__DependencyManager_saveNode name parentName gitRepository gitTag versionRange)
+    __DependencyManager_currentNodeID(current ${name} ${parentName})
+    set(propertyName __DependencyManager_property_nodeFeatures_${current_nodeID})
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    if (NOT alreadyDefined)
+        define_property(GLOBAL PROPERTY ${propertyName}
+                BRIEF_DOCS "Stores NAME, PARENT_NAME, CHILDREN, GIT_REPOSITORY, GIT_TAG, VERSION_RANGE of each node"
+                FULL_DOCS "Stores NAME, PARENT_NAME, CHILDREN, GIT_REPOSITORY, GIT_TAG, VERSION_RANGE of each node"
+                )
+    else ()
+        message(STATUS "Saving a duplicate node. Content will be overwritten, name=${name}, nodeID=${current_nodeID}")
+    endif ()
+    set(property NAME "${name}" PARENT_NAME "${parentName}" CHILDREN "" GIT_REPOSITORY "${gitRepository}"
+            GIT_TAG "${gitTag}" VERSION_RANGE "${versionRange}")
+    set_property(GLOBAL PROPERTY ${propertyName} ${property})
+    if (NOT current_duplicate)
+        __DependencyManager_addChild(${parentName} ${current_nodeID})
+    endif ()
+endfunction()
 
 # Users expect _SHA1 to take priority
 #   - if a different version is checked-out,
@@ -260,50 +426,6 @@ function(__DependencyManager_update_SHA1 name)
     endif ()
 endfunction()
 
-# Each dependency gets a global property for storing details like its version number
-# and desired version range from each caller of DependencyManager_Declare()
-# Properties must be passed as Option, single value keyword and multi-value keyword, see cmake_parse_arguments
-function(__DependencyManager_declareDependencyProperty name)
-    string(TOLOWER ${name} lcName)
-    set(propertyName "__DependencyManager_${lcName}_savedDetails")
-    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
-    if (NOT alreadyDefined)
-        define_property(GLOBAL PROPERTY ${propertyName}
-                BRIEF_DOCS "Details of dependency ${name}"
-                FULL_DOCS "Details of dependency ${name}"
-                )
-    endif ()
-endfunction()
-
-# Append to a global dependency property.
-# If it was not previously declared, than declare it first
-function(__DependencyManager_appendDependencyProperty name)
-    string(TOLOWER ${name} lcName)
-    set(propertyName "__DependencyManager_${lcName}_savedDetails")
-    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
-    if (NOT alreadyDefined)
-        __DependencyManager_declareDependencyProperty(${name})
-    endif ()
-    set_property(GLOBAL APPEND PROPERTY ${propertyName} ${ARGN})
-endfunction()
-
-# Extract stored arguments from previously defined property
-function(__DependencyManager_getDependencyProperty name prefix options oneValueArgs multiValueArgs)
-    string(TOLOWER ${name} lcName)
-    set(propertyName "__DependencyManager_${lcName}_savedDetails")
-    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
-    if (NOT alreadyDefined)
-        message(FATAL_ERROR "trying to get a property that is not yet defined: ${propertyName}")
-    endif ()
-    get_property(propertyValue GLOBAL PROPERTY ${propertyName})
-    cmake_parse_arguments("${prefix}" "${options}" "${oneValueArgs}" "${multiValueArgs}" ${propertyValue})
-    foreach (var IN LISTS options oneValueArgs multiValueArgs)
-        if (DEFINED ${prefix}_${var})
-            set(${prefix}_${var} "${${prefix}_${var}}" PARENT_SCOPE)
-        endif ()
-    endforeach ()
-endfunction()
-
 function(DependencyManager_Declare name GIT_REPOSITORY)
     string(TOLOWER "${name}" lcName)
     __DependencyManager_STAMP_DIR()
@@ -311,20 +433,21 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     __DependencyManager_update_SHA1(${name})
 
     set(options "")
-    set(oneValueArgs "PARENT_NAME")
-    set(multiValueArgs VERSION)
+    set(oneValueArgs PARENT_NAME VERSION_RANGE)
+    set(multiValueArgs "")
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    set(parentName "${PROJECT_NAME}")
-    if(DEFINED ARG_PARENT_NAME)
+    if (DEFINED ARG_PARENT_NAME)
         set(parentName "${ARG_PARENT_NAME}")
-    endif()
-
-    __DependencyManager_appendDependencyProperty(${lcName}
-            ${PROJECT_NAME}_${lcName}_VersionRange "${ARG_VERSION}")
+    else ()
+        set(parentName "${PROJECT_NAME}")
+    endif ()
 
     file(STRINGS "${SHA1_FILE}" GIT_TAG)
     string(STRIP "${GIT_TAG}" GIT_TAG)
-    message(STATUS "Declare dependency: NAME=${name} GIT_REPOSITORY=${GIT_REPOSITORY} TAG=${GIT_TAG}")
+    message(STATUS
+            "Declare dependency: NAME=${name} PARENT_NAME=${parentName} GIT_REPOSITORY=${GIT_REPOSITORY} TAG=${GIT_TAG}")
+
+    __DependencyManager_saveNode(${name} ${parentName} ${GIT_REPOSITORY} "${GIT_TAG}" ${ARG_VERSION_RANGE})
 
     FetchContent_Declare(
             ${name}
@@ -334,8 +457,8 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
 
             SOURCE_DIR "${DEPENDENCYMANAGER_BASE_DIR}/${name}"
             STAMP_DIR "${STAMP_DIR}"
-            GIT_REPOSITORY ${GIT_REPOSITORY}
-            GIT_TAG ${GIT_TAG}
+            GIT_REPOSITORY "${GIT_REPOSITORY}"
+            GIT_TAG "${GIT_TAG}"
     )
 endfunction()
 
@@ -364,6 +487,7 @@ endfunction()
 
 function(__DependencyManager_VersionCheck versionRange version noError)
     set(compatible ON)
+    string(REPLACE "," ";" versionRange "${versionRange}")
     string(STRIP "${version}" version)
     foreach (v IN LISTS versionRange)
         string(STRIP "${v}" v)
@@ -393,14 +517,27 @@ function(DependencyManager_Populate name)
     set(lockfile "${STAMP_DIR}/._private_dependencymanager_${name}-lockfile")
 
     set(options DO_NOT_MAKE_AVAILABLE NO_VERSION_ERROR)
-    set(oneValueArgs "")
+    set(oneValueArgs PARENT_NAME)
     set(multiValueArgs "")
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    if(DEFINED ARG_NO_VERSION_ERROR)
+    if (DEFINED ARG_NO_VERSION_ERROR)
         set(versionError OFF)
-    else()
+    else ()
         set(versionError ${DEPENDENCYMANAGER_VERSION_ERROR})
-    endif()
+    endif ()
+    if (DEFINED ARG_PARENT_NAME)
+        set(parentName "${ARG_PARENT_NAME}")
+    else ()
+        set(parentName "${PROJECT_NAME}")
+    endif ()
+
+    # get nodeID of this node
+    __DependencyManager_currentNodeID("" ${name} ${parentName})
+    message("! _nodeID=${_nodeID}")
+    message("! _duplicate=${_duplicate}")
+    if (NOT _duplicate)
+        message(FATAL_ERROR "Populating a node that was not declared before. name=${name}, parentName=${parentName}")
+    endif ()
 
     FetchContent_GetProperties(${name})
     string(TOLOWER "${name}" lcName)
@@ -408,34 +545,31 @@ function(DependencyManager_Populate name)
         file(LOCK "${lockfile}" GUARD PROCESS TIMEOUT 1000)
         FetchContent_Populate(${name})
         if (NOT ARG_DO_NOT_MAKE_AVAILABLE)
-            message(STATUS "DependencyManager_Populate(${name}) and add_subdirectory()")
+            message(STATUS "DependencyManager_Populate(${name}) and make available")
             set(scopeVersion ${CMAKE_CURRENT_BINARY_DIR}/ScopeVersion_${name}.cmake)
             file(WRITE ${scopeVersion} "set(${name}_VERSION \${${name}_VERSION} PARENT_SCOPE)")
             set(CMAKE_PROJECT_${name}_INCLUDE "${scopeVersion}")
             add_subdirectory(${${lcName}_SOURCE_DIR} ${${lcName}_BINARY_DIR} EXCLUDE_FROM_ALL)
-            __DependencyManager_appendDependencyProperty(${lcName} ${name}_VERSION "${${name}_VERSION}")
+            if (NOT ${name}_VERSION)
+                message(STATUS "No version found for project ${name}")
+            endif ()
+            __DependencyManager_updateParentNodes(${name} ${_nodeID} "${name}_VERSION")
         endif ()
         file(LOCK "${lockfile}" RELEASE)
     endif ()
 
-    __DependencyManager_getDependencyProperty(
-            ${lcName}
-            prop
-            ""
-            "${name}_VERSION"
-            "${PROJECT_NAME}_${lcName}_VersionRange"
-    )
-    if (DEFINED prop_${name}_VERSION AND DEFINED prop_${PROJECT_NAME}_${lcName}_VersionRange)
-        __DependencyManager_VersionCheck(
-                "${prop_${PROJECT_NAME}_${lcName}_VersionRange}"
-                "${prop_${name}_VERSION}"
-                ${versionError}
-        )
-        set(${name}_VERSION "${prop_${name}_VERSION}" PARENT_SCOPE)
-    else ()
-        message(WARNING "could not get version properties for dependency ${name}. ${prop_${name}_VERSION} and ${prop_${PROJECT_NAME}_${lcName}_VersionRange}")
+    __DependencyManager_getParentNodeInfo(current ${name})
+    if (NOT _nodeID STREQUAL current_nodeID)
+        message(FATAL_ERROR "Inconsistent node ID's: _nodeID=${_nodeID}, current_nodeID=${current_nodeID}")
+    endif ()
+    __DependencyManager_getNodeFeatures(node ${current_nodeID})
+    if ((NOT node_name STREQUAL name) OR (NOT node_parentName STREQUAL parentName))
+        message(FATAL_ERROR "Corrupt node features or parent node info: node_name(${node_name})!=name(${name}; node_parentName(${node_parentName})!=parentName(${parentName})")
     endif ()
 
+    __DependencyManager_VersionCheck("${node_VersionRange}" "${current_VERSION}" ${versionError})
+
+    set(${name}_VERSION "${current_VERSION}" PARENT_SCOPE)
     foreach (s SOURCE_DIR BINARY_DIR POPULATED)
         set(${lcName}_${s} "${${lcName}_${s}}" PARENT_SCOPE)
     endforeach ()
