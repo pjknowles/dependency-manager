@@ -152,63 +152,28 @@ During declaration stage we register each node and add it as a child of a parent
 If a child node by that name already exists, than its content is overwritten and
 a warning about duplicate node gets printed.
 
-By design, nodes that can have children (parent nodes) have a unique name.
-Parent nodes are registered when they are first populated and made available.
-We keep lists of parent node names, node ID's, and versions.
+By design, nodes that are made available form a unique set. We call them parent nodes, as they
+are the only ones that can declare more dependencies as children.
+We track parent nodes and store the following features:
 
-During population stage, on the first call that makes project available,
-we register populated node as a parent.
-Version of populated node is extracted from a global property and used to
-check that it satisfies ``VERSION_RANGE`` in stored node features.
+1. ``NAME``
+2. ``NODE_ID``
+3. ``VERSION`` is the actual version of the project
 
-During declaration stage we populate a list of ``nodeID`` strings and declare
-a property under ``nodeID`` name with the relevant node features.
-We need to know current nodeID for storage and to increment it.
-If we know the parent nodeID we can use the list of declared nodeID's to get all
-the relevant children. A sibling with the greatest position is the current nodeID.
 
-During population we update a property with the list of versions for each dependency.
-
-How do we get the parent nodeID?
-The dependency tree is reduced to a flat list, so while there are multiple declared nodes
-by the same name, population is initiated by a node uniquely identified by its name.
-That is, parent nodes form a set.
-We need to store their ``nodeID`` as well as their ``VERSION``.
-
-This is the complete definition of declared dependency tree together with the versions
-of cloned dependencies. It can be used to check the version and write a graphical
-representation of the tree.
+This is the complete definition of dependency tree .
+It is used to check the version and generate its graphical representation.
 
 Global Properties:
 
-1. ``__DependencyManager_property_nodeIDs`` -- list of nodeID's
-2. ``__DependencyManager_property_nodeFeatures_${nodeID}`` -- store node features, one for each node
-3. ``__DependencyManager_property_parentNodes`` -- multi-value-arguments
-        ``NAME`` - list of parent names,
-        ``NODE_ID`` - list of corresponding nodeIDs,
+1. ``__DependencyManager_property_nodeFeatures_${nodeID}`` -- store node features, one for each node in the full tree
+2. ``__DependencyManager_property_parentNodes`` -- store extra features of parent nodes in multi-value-arguments:
+        ``NAME`` - list of parent names;
+        ``NODE_ID`` - list of corresponding nodeIDs;
         ``VERSION`` - list of corresponding versions
 
-Useful Operations:
-
-1. ``__DependencyManager_parentNodeID(<parentName> <out>)``
-        Return nodeID of node with ``NAME`` <parentName>
-
-2. ``__DependencyManager_childrenNodeIDs(<parentName> <out>)``
-        Return nodeID's of all children of project <parentName>
-
-3. ``__DependencyManager_nodeNames(<nodeIDs> <out>)``
-        Return a list of node names for corresponding ID's
-
-4. ``__DependencyManager_currentNodeID(<parentName> <name> <out> <duplicate>)``
-        Return nodeID for current declaration and whether it is a duplicate,
-        in which case nodeID is already registered, nodeFeatures will be overwritten and
-        nodeIDs don't need to be updated.
-
-5. ``__DependencyManager_storeNode(<nodeID> <name> <parentName> <versionRange>)``
-        Store node features, if nodeID is already registered than update node features with new values and return.
-        If not a duplicate, update list of nodeIDs and add itself as a child in parent node features.
-
-6. ``__DependencyManager_updateParentNodes(<nodeID> <name> <parentName> <versionRange>)``
+(For Developers) Documentation of Utility Functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #]=======================================================================]
 
 include(FetchContent)
@@ -230,7 +195,14 @@ macro(__DependencyManager_SHA1_FILE name)
     set(SHA1_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${name}_SHA1")
 endmacro()
 
-# If there are duplicates in the list, sets ${out} to True
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_hasDuplicates(<list> <out>)
+
+If ``<list>`` contains duplicates, sets variable called ``<out>`` to ``TRUE``,
+otherwise to ``FALSE``.
+#]=======================================================================]
 function(__DependencyManager_hasDuplicates list out)
     set(uniqueList "${list}")
     list(REMOVE_DUPLICATES uniqueList)
@@ -243,7 +215,13 @@ function(__DependencyManager_hasDuplicates list out)
     endif ()
 endfunction()
 
-# Store name, nodeID and version of a new parent node
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_updateParentNodes(<name> <nodeID> <version>)
+
+Register a node as a parent by adding its parent node features to the global property.
+#]=======================================================================]
 function(__DependencyManager_updateParentNodes name nodeID version)
     messagev("__DependencyManager_updateParentNodes(${name} ${nodeID} ${version})")
     set(propertyName __DependencyManager_property_parentNodes)
@@ -268,7 +246,14 @@ function(__DependencyManager_updateParentNodes name nodeID version)
     set_property(GLOBAL PROPERTY ${propertyName} "${nameList};${nodeIDList};${versionList}")
 endfunction()
 
-# makes full content of parentNodes property available at parent scope
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_getParentNodes(<prefix>)
+
+Makes full content of parent nodes property available at parent scope
+via lists ``${<prefix>}_NAME``, ``${<prefix>}_NODE_ID``, ``${<prefix>}_VERSION``.
+#]=======================================================================]
 function(__DependencyManager_getParentNodes prefix)
     messagev("__DependencyManager_getParentNodes(${prefix})")
     set(propertyName __DependencyManager_property_parentNodes)
@@ -284,9 +269,14 @@ function(__DependencyManager_getParentNodes prefix)
     set(${prefix}_VERSION "${${prefix}_VERSION}" PARENT_SCOPE)
 endfunction()
 
-# Given a name of the parent returns parent nodeID
-# Sets: ${prefix}_nodeID, ${prefix}_version
-#TODO generalise to multiple root nodes
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_getParentNodeInfo(<prefix> <name>)
+
+Makes parent node features of a parent ``<name>`` available at parent scope
+via variables ``${<prefix>}_NODE_ID``, ``${<prefix>}_VERSION``.
+#]=======================================================================]
 function(__DependencyManager_getParentNodeInfo prefix name)
     messagev("__DependencyManager_getParentNodeInfo(${prefix} ${name}) ")
     __DependencyManager_getParentNodes(prop)
@@ -305,8 +295,21 @@ function(__DependencyManager_getParentNodeInfo prefix name)
     set(${prefix}_version "${${prefix}_VERSION}" PARENT_SCOPE)
 endfunction()
 
-# return node features
-# If nodeID is 1, than this is a root node and it gets created empty on the first call
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_getNodeFeatures(<prefix> <nodeID>)
+
+Makes node features of a node ``<name>`` available at parent scope via variables
+``${prefix}_name``,
+``${prefix}_parentName``,
+``${prefix}_gitRepository``,
+``${prefix}_gitTag``,
+``${prefix}_versionRange``,
+``${prefix}_children``.
+If ``<nodeID>`` is ``1``, than this is a root node and it gets created
+empty on the first call
+#]=======================================================================]
 function(__DependencyManager_getNodeFeatures prefix nodeID)
     messagev("__DependencyManager_getNodeFeatures(${prefix} ${nodeID})")
     set(propertyName __DependencyManager_property_nodeFeatures_${nodeID})
@@ -337,7 +340,13 @@ function(__DependencyManager_getNodeFeatures prefix nodeID)
     set(${prefix}_children "${prop_CHILDREN}" PARENT_SCOPE)
 endfunction()
 
-# appends a child to a parent node
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_addChild(<parentName> <child_nodeID>)
+
+Appends a child to a parent node.
+#]=======================================================================]
 function(__DependencyManager_addChild parentName child_nodeID)
     messagev("__DependencyManager_addChild(${parentName} ${child_nodeID})")
     __DependencyManager_getParentNodeInfo(parent ${parentName})
@@ -355,7 +364,18 @@ function(__DependencyManager_addChild parentName child_nodeID)
     set_property(GLOBAL PROPERTY ${propertyName} ${property})
 endfunction()
 
-# Deduces the current nodeID by looking at the children of parent node
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_currentNodeID(<prefix> <name> <parentName>)
+
+Deduces the current nodeID by looking at the children of the parent node.
+Sets the following variables at parent scope:
+
+1. ``${prefix}_duplicate`` to ``TRUE`` if there is already a node under that name among children;
+2. ``${prefix}_nodeID`` to deduced current node ID. If the node is a duplicate uses ``nodeID`` of the relevant child.
+
+#]=======================================================================]
 function(__DependencyManager_currentNodeID prefix name parentName)
     messagev("__DependencyManager_currentNodeID(${prefix} ${name} ${parentName})")
     __DependencyManager_getParentNodeInfo(parent ${parentName})
@@ -386,8 +406,14 @@ function(__DependencyManager_currentNodeID prefix name parentName)
     set(${prefix}_nodeID "${currentNodeID}" PARENT_SCOPE)
 endfunction()
 
-# Store node features, if nodeID is already registered than update node features with new values and return.
-# If not a duplicate, update list of nodeIDs and add itself as a child in parent node features.
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_saveNode(<name> <parentName> <gitRepository> <gitTag> <versionRange>)
+
+Store node features. If the node is a duplicate, overwrite content of the registered node.
+Otherwise, create a new node property and add itself as a child of the parent node.
+#]=======================================================================]
 function(__DependencyManager_saveNode name parentName gitRepository gitTag versionRange)
     messagev("__DependencyManager_saveNode(${name} ${parentName} ${gitRepository} ${gitTag} ${versionRange})")
     __DependencyManager_currentNodeID(current ${name} ${parentName})
@@ -409,12 +435,14 @@ function(__DependencyManager_saveNode name parentName gitRepository gitTag versi
     endif ()
 endfunction()
 
-# Users expect _SHA1 to take priority
-#   - if a different version is checked-out,
-#     it should check out the stored commit
-# Developers expect checked-out dependency to take priority
-#   - if a different version is checked-out,
-#     it should update the stored commit
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_update_SHA1(<name>)
+
+If ``DEPENDENCYMANAGER_HASH_UPDATE`` is ``ON``, than updates ``<name>_SHA1``
+of a cloned dependency. The repository and SHA1 file must be in current directory.
+#]=======================================================================]
 function(__DependencyManager_update_SHA1 name)
     if (NOT DEPENDENCYMANAGER_HASH_UPDATE)
         return()
@@ -480,6 +508,17 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     )
 endfunction()
 
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_VersionCompare(<version1> <comp> <version2> <out>)
+
+Compares ``<version1>`` and ``<version2>``. ``<comp>`` can be one of
+``""``, ``=``, ``<``, ``<=``, ``>``, ``>=``. Empty is equivalent to ``=``.
+Comparison operators are mapped to ``VERSION_<COMPARISON>`` options in
+``if()`` statements.
+Result is set to variable ``<out>`` in parent scope.
+#]=======================================================================]
 function(__DependencyManager_VersionCompare version1 comp version2 out)
     if (NOT comp)
         set(comparisonOperator VERSION_EQUAL)
@@ -503,6 +542,14 @@ function(__DependencyManager_VersionCompare version1 comp version2 out)
     endif ()
 endfunction()
 
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_VersionCheck(<versionRange> <version> <noError>)
+
+Checks that ``<version>`` is within ``<versionRange>``.
+If not, an error is raised, unless ``<noError>`` is ``TRUE``
+#]=======================================================================]
 function(__DependencyManager_VersionCheck versionRange version noError)
     set(compatible ON)
     string(REPLACE "," ";" versionRange "${versionRange}")
