@@ -127,7 +127,9 @@ Writes a dot file with the current structure of dependency tree. It can be compi
 By default, the dot file is written to ``${CMAKE_CURRENT_BINARY_DIR}/dependencyManager_dotGraph.dot``.
 This can be changed by passing ``<name>``, which can be an absolute path or
 a path relative to ``${CMAKE_CURRENT_BINARY_DIR}``
+#]=======================================================================]
 
+#[=======================================================================[.rst:
 (For Developers) Structure of the Dependency Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -597,7 +599,6 @@ function(DependencyManager_Populate name)
     endif ()
     messagev("DependencyManager_Populate(${NAME} PARENT_NAME ${ARG_PARENT_NAME})")
 
-    # get nodeID of this node
     __DependencyManager_currentNodeID("" ${name} ${parentName})
     if (NOT _duplicate)
         message(FATAL_ERROR "Populating a node that was not declared before. name=${name}, parentName=${parentName}")
@@ -639,6 +640,11 @@ function(DependencyManager_Populate name)
     endforeach ()
 endfunction()
 
+macro(__DependencyManager_nodeLevel id out)
+    string(REPLACE "." ";" idList "${id}")
+    list(LENGTH idList ${out})
+endmacro()
+
 function(DependencyManager_DotGraph)
     messagev("DependencyManager_DotGraph")
     cmake_parse_arguments(ARG "" "NAME" "" ${ARGN})
@@ -651,12 +657,12 @@ function(DependencyManager_DotGraph)
     else ()
         set(fileName "${CMAKE_CURRENT_BINARY_DIR}/dependencyManager_dotGraph.dot")
     endif ()
-    # Loop over each node and write the connection from parent to child
-    __DependencyManager_getParentNodes(parent)
-    messagev("parent_NAME=${parent_NAME}")
-    messagev("parent_NODE_ID=${parent_NODE_ID}")
-    messagev("parent_VERSION=${parent_VERSION}")
+
     set(output "digraph {")
+    set(maxLvl 1)
+    set(nodeIDs_Lvl1 1)
+
+    __DependencyManager_getParentNodes(parent)
     list(LENGTH parent_NODE_ID n)
     math(EXPR n "${n}-1")
     foreach (i RANGE ${n})
@@ -665,7 +671,7 @@ function(DependencyManager_DotGraph)
         list(GET parent_VERSION ${i} version)
         __DependencyManager_getNodeFeatures("" "${id}")
         if (i EQUAL 0)
-            set(output "${output}\n\"${id}\"[label=\"${name}(${version})\\n\"];")
+            set(output "${output}\n\"${id}\"[shape=oval,label=\"${name}\\n(${version})\\n\"];")
         endif ()
         foreach (child_id IN LISTS _children)
             __DependencyManager_getNodeFeatures(child "${child_id}")
@@ -674,28 +680,44 @@ function(DependencyManager_DotGraph)
                 list(GET parent_VERSION ${pos} child_version)
                 list(GET parent_NODE_ID ${pos} child_as_parent_id)
             endif ()
-            set(output "${output}\n\"${child_id}\"[label=\"${child_name}(${child_version})\\n[${child_versionRange}]\"];")
+            set(output "${output}\n\"${child_id}\"[shape=oval,label=\"${child_name}\\n(${child_version})\\n[${child_versionRange}]\"];")
             if (child_id STREQUAL child_as_parent_id)
                 set(output "${output}\n\"${id}\"->\"${child_id}\";")
             else ()
-                set(output "${output}\n\"${id}\"->\"${child_id}\"[color=blue];")
-                set(output "${output}\n\"${id}\"->\"${child_as_parent_id}\"[color=green];")
+                set(output "${output}\n\"${id}\"->\"${child_id}\"[color=grey];")
+                set(output "${output}\n\"${id}\"->\"${child_as_parent_id}\"[style=dotted];")
             endif ()
+            __DependencyManager_nodeLevel("${child_id}" lvl)
+            if(lvl GREATER maxLvl)
+                set(maxLvl ${lvl})
+            endif()
+            list(APPEND nodeIDs_Lvl${lvl} "${child_id}")
         endforeach ()
-        #set(${prefix}_name "${prop_NAME}" PARENT_SCOPE)
-        #set(${prefix}_parentName "${prop_PARENT_NAME}" PARENT_SCOPE)
-        #set(${prefix}_gitRepository "${prop_GIT_REPOSITORY}" PARENT_SCOPE)
-        #set(${prefix}_gitTag "${prop_GIT_TAG}" PARENT_SCOPE)
-        #set(${prefix}_versionRange "${prop_VERSION_RANGE}" PARENT_SCOPE)
-        #set(${prefix}_children "${prop_CHILDREN}" PARENT_SCOPE)
     endforeach ()
-    # If the child is not a parent then use blue color and add connection to parent of the same name with green color
-    # Increment maximum rank of tree
-    # For each rank store nodeID's as they come in.
-    # They are sorted by construction!
     # To ensure tree structure:
     #   create fictitious rank nodes
     #   add invisible connections among all nodes of the same rank
+    foreach (i RANGE 1 ${maxLvl})
+        set(output "${output}\nrank${i}[style=invisible,width=0,height=0,fixedsize=true];")
+    endforeach()
+    if(${maxLvl} GREATER 1)
+        set(output "${output}\nrank1")
+        foreach (i RANGE 2 ${maxLvl})
+            set(output "${output}->rank${i}")
+        endforeach ()
+        set(output "${output}[constraint=false,style=invis]")
+    endif()
+    foreach (i RANGE 1 ${maxLvl})
+        set(output "${output}\n{")
+        set(output "${output}rank=same;")
+        set(output "${output}\nrank${i}")
+        foreach(id IN LISTS nodeIDs_Lvl${i})
+            set(output "${output}->\"${id}\"")
+        endforeach()
+        set(output "${output}[style=invis];")
+        set(output "${output}\nrankdir=LR;")
+        set(output "${output}}")
+    endforeach()
     set(output "${output}\n}")
     file(WRITE "${fileName}" "${output}")
 endfunction()
