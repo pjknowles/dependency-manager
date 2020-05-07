@@ -169,7 +169,9 @@ It is used to check the version and generate its graphical representation.
 Global Properties:
 
 1. ``__DependencyManager_property_nodeFeatures_${nodeID}`` -- store node features, one for each node in the full tree
-2. ``__DependencyManager_property_parentNodes`` -- store extra features of parent nodes in multi-value-arguments:
+2. ``__DependencyManager_property_nodeList`` -- keeps track of nodes as they are created by storing a list of names and node IDs
+        in multi-value-arguements ``NAME`` and ``NODE_ID`` respectively.
+3. ``__DependencyManager_property_parentNodes`` -- store extra features of parent nodes in multi-value-arguments:
         ``NAME`` - list of parent names;
         ``NODE_ID`` - list of corresponding nodeIDs;
         ``VERSION`` - list of corresponding versions
@@ -411,6 +413,50 @@ endfunction()
 #[=======================================================================[.rst:
 .. code-block:: cmake
 
+    __DependencyManager_updateNodeList(<name> <nodeID>)
+
+Updates global list of nodes by storing ``<name>`` and ``<nodeID>``.
+#]=======================================================================]
+function(__DependencyManager_updateNodeList name nodeID)
+    messagev("__DependencyManager_updateNodeList(${name} ${nodeID}) ")
+    set(propertyName __DependencyManager_property_nodeList)
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    if (NOT alreadyDefined)
+        define_property(GLOBAL PROPERTY ${propertyName}
+                BRIEF_DOCS "Stores NAME, NODE_ID of each node as they are created"
+                FULL_DOCS "Stores NAME, NODE_ID of each node as they are created"
+                )
+    endif ()
+    get_property(propertyValue GLOBAL PROPERTY ${propertyName})
+    cmake_parse_arguments(prop "" "" "NAME;NODE_ID" ${propertyValue})
+    set(property NAME "${prop_NAME}" "${name}" NODE_ID "${prop_NODE_ID}" "${current_nodeID}")
+    set_property(GLOBAL PROPERTY ${propertyName} ${property})
+endfunction()
+
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
+    __DependencyManager_getNodeList(<name> <nodeID>)
+
+Updates global list of nodes by storing ``<name>`` and ``<nodeID>``.
+Makes node list available at parent scope via variables ``${<prefix>}_NAME``, ``${<prefix>}_NODE_ID``.
+#]=======================================================================]
+function(__DependencyManager_getNodeList prefix)
+    messagev("__DependencyManager_getNodeList(${prefix})")
+    set(propertyName __DependencyManager_property_nodeList)
+    get_property(alreadyDefined GLOBAL PROPERTY ${propertyName} DEFINED)
+    if (NOT alreadyDefined)
+        message(FATAL_ERROR "Attempting to get node list before it was created")
+    endif ()
+    get_property(propertyValue GLOBAL PROPERTY ${propertyName})
+    cmake_parse_arguments("${prefix}" "" "" "NAME;NODE_ID" ${propertyValue})
+    set(${prefix}_NAME "${${prefix}_NAME}" PARENT_SCOPE)
+    set(${prefix}_NODE_ID "${${prefix}_NODE_ID}" PARENT_SCOPE)
+endfunction()
+
+#[=======================================================================[.rst:
+.. code-block:: cmake
+
     __DependencyManager_saveNode(<name> <parentName> <gitRepository> <gitTag> <versionRange>)
 
 Store node features. If the node is a duplicate, overwrite content of the registered node.
@@ -432,8 +478,10 @@ function(__DependencyManager_saveNode name parentName gitRepository gitTag versi
     set(property NAME "${name}" PARENT_NAME "${parentName}" CHILDREN "" GIT_REPOSITORY "${gitRepository}"
             GIT_TAG "${gitTag}" VERSION_RANGE "${versionRange}")
     set_property(GLOBAL PROPERTY ${propertyName} ${property})
+
     if (NOT current_duplicate)
         __DependencyManager_addChild(${parentName} ${current_nodeID})
+        __DependencyManager_updateNodeList(${name} ${current_nodeID})
     endif ()
 endfunction()
 
@@ -493,9 +541,9 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     file(STRINGS "${SHA1_FILE}" GIT_TAG)
     string(STRIP "${GIT_TAG}" GIT_TAG)
     message(STATUS
-            "Declare dependency: NAME=${name} PARENT_NAME=${parentName} GIT_REPOSITORY=${GIT_REPOSITORY} TAG=${GIT_TAG}")
+            "Declare dependency: NAME=${name} PARENT_NAME=${parentName} GIT_REPOSITORY=${GIT_REPOSITORY} GIT_TAG=${GIT_TAG}")
 
-    __DependencyManager_saveNode(${name} ${parentName} ${GIT_REPOSITORY} "${GIT_TAG}" ${ARG_VERSION_RANGE})
+    __DependencyManager_saveNode("${name}" "${parentName}" "${GIT_REPOSITORY}" "${GIT_TAG}" "${ARG_VERSION_RANGE}")
 
     FetchContent_Declare(
             ${name}
@@ -547,12 +595,12 @@ endfunction()
 #[=======================================================================[.rst:
 .. code-block:: cmake
 
-    __DependencyManager_VersionCheck(<versionRange> <version> <noError>)
+    __DependencyManager_VersionCheck(<versionRange> <version> <out>)
 
-Checks that ``<version>`` is within ``<versionRange>``.
-If not, an error is raised, unless ``<noError>`` is ``TRUE``
+Checks that ``<version>`` is within ``<versionRange>``. If it is within, then
+store ``TRUE`` in variable ``<out>``, otherwise store ``FALSE``.
 #]=======================================================================]
-function(__DependencyManager_VersionCheck versionRange version noError)
+function(__DependencyManager_VersionCheck versionRange version out)
     set(compatible ON)
     string(REPLACE "," ";" versionRange "${versionRange}")
     string(STRIP "${version}" version)
@@ -569,14 +617,7 @@ function(__DependencyManager_VersionCheck versionRange version noError)
             break()
         endif ()
     endforeach ()
-    if (NOT compatible)
-        set(mess "Current version (${version}) is outside of required version range (${versionRange})")
-        if (noError)
-            message(WARNING "${mess}")
-        else ()
-            message(FATAL_ERROR "${mess}")
-        endif ()
-    endif ()
+    set(${out} "${compatible}" PARENT_SCOPE)
 endfunction()
 
 function(DependencyManager_Populate name)
@@ -597,44 +638,58 @@ function(DependencyManager_Populate name)
     else ()
         set(parentName "${PROJECT_NAME}")
     endif ()
-    messagev("DependencyManager_Populate(${NAME} PARENT_NAME ${ARG_PARENT_NAME})")
+    messagev("DependencyManager_Populate(${name} PARENT_NAME ${parentName})")
 
-    __DependencyManager_currentNodeID("" ${name} ${parentName})
-    if (NOT _duplicate)
-        message(FATAL_ERROR "Populating a node that was not declared before. name=${name}, parentName=${parentName}")
-    endif ()
-
-    FetchContent_GetProperties(${name})
+    __DependencyManager_getNodeList(all)
+    string(TOLOWER "${all_NAME}" all_NAME)
     string(TOLOWER "${name}" lcName)
+    list(FIND all_NAME "${lcName}" i)
+    if(i EQUAL -1)
+        message(FATAL_ERROR "Could not find node name=${name} in the global list of nodes")
+    endif()
+    list(GET all_NODE_ID ${i} firstDeclaredNodeID)
+
+    # The node that gets populated is based on Declaration order
+    # NOT population order
+    # I need to get the node ID using FetchContent properties
+    FetchContent_GetProperties(${name})
     if (NOT ${lcName}_POPULATED)
         file(LOCK "${lockfile}" GUARD PROCESS TIMEOUT 1000)
         FetchContent_Populate(${name})
         if (NOT ARG_DO_NOT_MAKE_AVAILABLE)
             message(STATUS "DependencyManager_Populate(${name}) and make available")
-            set(scopeVersion ${CMAKE_CURRENT_BINARY_DIR}/ScopeVersion_${name}.cmake)
-            file(WRITE ${scopeVersion} "set(${name}_VERSION \${${name}_VERSION} PARENT_SCOPE)")
+            set(scopeVersion ${CMAKE_CURRENT_BINARY_DIR}/UpdateParentNodes_${name}.cmake)
+            file(WRITE ${scopeVersion} "__DependencyManager_updateParentNodes(${name} ${firstDeclaredNodeID} \"\${${name}_VERSION}\" )")
             set(CMAKE_PROJECT_${name}_INCLUDE "${scopeVersion}")
             add_subdirectory(${${lcName}_SOURCE_DIR} ${${lcName}_BINARY_DIR} EXCLUDE_FROM_ALL)
-            if (NOT ${name}_VERSION)
-                message(STATUS "No version found for project ${name}")
-            endif ()
-            __DependencyManager_updateParentNodes(${name} ${_nodeID} "${${name}_VERSION}")
         endif ()
         file(LOCK "${lockfile}" RELEASE)
     endif ()
 
-    __DependencyManager_getParentNodeInfo(current ${name})
-    if (NOT _nodeID STREQUAL current_nodeID)
-        message(FATAL_ERROR "Inconsistent node ID's: _nodeID=${_nodeID}, current_nodeID=${current_nodeID}")
+    __DependencyManager_currentNodeID(current ${name} ${parentName})
+    if (NOT current_duplicate)
+        message(FATAL_ERROR "Populating a node that was not declared before. name=${name}, parentName=${parentName}")
     endif ()
-    __DependencyManager_getNodeFeatures(node ${current_nodeID})
-    if ((NOT node_name STREQUAL name) OR (NOT node_parentName STREQUAL parentName))
-        message(FATAL_ERROR "Corrupt node features or parent node info: node_name(${node_name})!=name(${name}; node_parentName(${node_parentName})!=parentName(${parentName})")
+    __DependencyManager_getParentNodeInfo(first ${name})
+    if (NOT firstDeclaredNodeID STREQUAL first_nodeID)
+        message(FATAL_ERROR "Inconsistent node ID's: firstDeclaredNodeID=${firstDeclaredNodeID}, first_nodeID=${first_nodeID}")
+    endif ()
+    __DependencyManager_getNodeFeatures(current ${current_nodeID})
+    if ((NOT current_name STREQUAL name) OR (NOT current_parentName STREQUAL parentName))
+        message(FATAL_ERROR "Corrupt node features or parent node info: current_name(${current_name})!=name(${name}); current_parentName(${current_parentName})!=parentName(${parentName})")
     endif ()
 
-    __DependencyManager_VersionCheck("${node_VersionRange}" "${current_VERSION}" ${versionError})
+    __DependencyManager_VersionCheck("${current_versionRange}" "${first_version}" compatible)
+    if (NOT compatible)
+        set(mess "Cloned version ${name}(${first_version}) is outside of required version range (${current_versionRange})")
+        if (versionError)
+            message(FATAL_ERROR "${mess}")
+        else ()
+            message(WARNING "${mess}")
+        endif ()
+    endif ()
 
-    set(${name}_VERSION "${current_VERSION}" PARENT_SCOPE)
+    set(${name}_VERSION "${first_VERSION}" PARENT_SCOPE)
     foreach (s SOURCE_DIR BINARY_DIR POPULATED)
         set(${lcName}_${s} "${${lcName}_${s}}" PARENT_SCOPE)
     endforeach ()
@@ -688,9 +743,9 @@ function(DependencyManager_DotGraph)
                 set(output "${output}\n\"${id}\"->\"${child_as_parent_id}\"[style=dotted];")
             endif ()
             __DependencyManager_nodeLevel("${child_id}" lvl)
-            if(lvl GREATER maxLvl)
+            if (lvl GREATER maxLvl)
                 set(maxLvl ${lvl})
-            endif()
+            endif ()
             list(APPEND nodeIDs_Lvl${lvl} "${child_id}")
         endforeach ()
     endforeach ()
@@ -699,25 +754,25 @@ function(DependencyManager_DotGraph)
     #   add invisible connections among all nodes of the same rank
     foreach (i RANGE 1 ${maxLvl})
         set(output "${output}\nrank${i}[style=invisible,width=0,height=0,fixedsize=true];")
-    endforeach()
-    if(${maxLvl} GREATER 1)
+    endforeach ()
+    if (${maxLvl} GREATER 1)
         set(output "${output}\nrank1")
         foreach (i RANGE 2 ${maxLvl})
             set(output "${output}->rank${i}")
         endforeach ()
         set(output "${output}[constraint=false,style=invis]")
-    endif()
+    endif ()
     foreach (i RANGE 1 ${maxLvl})
         set(output "${output}\n{")
         set(output "${output}rank=same;")
         set(output "${output}\nrank${i}")
-        foreach(id IN LISTS nodeIDs_Lvl${i})
+        foreach (id IN LISTS nodeIDs_Lvl${i})
             set(output "${output}->\"${id}\"")
-        endforeach()
+        endforeach ()
         set(output "${output}[style=invis];")
         set(output "${output}\nrankdir=LR;")
         set(output "${output}}")
-    endforeach()
+    endforeach ()
     set(output "${output}\n}")
     file(WRITE "${fileName}" "${output}")
 endfunction()
