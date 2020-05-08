@@ -95,6 +95,9 @@ than an error gets raised and build configuration stops.
 With option ``NO_VERSION_ERROR`` only a warning is printed and configuration continues.
 ``${name}_VERSION`` is also brought up to ``PARENT_SCOPE``.
 
+If cached option ``DEPENDENCYMANAGER_VERSION_ERROR`` is set to ``OFF``, then an error
+is not raised when version clash is found. Note, that ``NO_VERSION_ERROR`` takes precedence.
+
 Note, that file locking is used which acts as a mutex when multiple configurations are run simultaneously.
 The file lock files are stored in ``STAMP_DIR``.
 
@@ -175,6 +178,11 @@ Global Properties:
         ``NAME`` - list of parent names;
         ``NODE_ID`` - list of corresponding nodeIDs;
         ``VERSION`` - list of corresponding versions
+
+(For Developers) Verbose Output
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Passing ``--log-level=debug -D DEPENDENCYMANAGER_VERBOSE=ON`` to command-line, turns on
+extra printouts. This is useful for debugging only.
 
 (For Developers) Documentation of Utility Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
