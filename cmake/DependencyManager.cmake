@@ -180,7 +180,10 @@ Global Properties:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #]=======================================================================]
 
+# FetchContent has a non-cached variable which means it has to be included every time
 include(FetchContent)
+
+include_guard()
 
 set(DEPENDENCYMANAGER_BASE_DIR "${CMAKE_SOURCE_DIR}/dependencies" CACHE PATH
         "Directory in which to clone all dependencies, and where <name>_SHA1 files are stored.")
