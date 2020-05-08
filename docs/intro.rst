@@ -159,4 +159,8 @@ That way when the stored commits are updated after a pull,
 running cmake configuraiton will check out the correct version.
 This is the behavior that most users will want and expect.
 
+Authors
+^^^^^^^
+Marat Sibaev and Peter J. Knowles.
+
 .. _FetchContent: https://cmake.org/cmake/help/latest/module/FetchContent.html
