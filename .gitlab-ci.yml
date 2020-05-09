@@ -1,0 +1,29 @@
+cache:
+  key: ${CI_PROJECT_NAME}
+  paths:
+    - public
+
+build:
+  stage: build
+  image: ${CI_REGISTRY}/dependencymanager/dependency-manager
+  script:
+    - cat ~/.bashrc
+    - . ~/.bashrc
+    - TOP=$PWD
+    - git checkout $CI_COMMIT_SHA # because of cache
+    - git fetch --tags
+    - git reset --hard
+    - conda activate ci
+    - cd $TOP/docs; make html; cd $TOP
+    - mkdir -p $TOP/public/
+    - rsync -a --delete $TOP/docs/_build/html/ $TOP/public/
+
+pages:
+  stage: deploy
+  script:
+    - echo nothing
+  artifacts:
+    paths:
+      - public
+#  only:
+#    - master
