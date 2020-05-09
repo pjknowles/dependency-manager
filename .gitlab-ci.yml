@@ -5,7 +5,7 @@ cache:
 
 build:
   stage: build
-  image: ${CI_REGISTRY}/knowles-group/dependency-manager
+  image: ${CI_REGISTRY}/dependencymanager/dependency-manager
   script:
     - cat ~/.bashrc
     - . ~/.bashrc
