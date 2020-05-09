@@ -51,10 +51,10 @@ The value of ``GIT_TAG`` passed to ``FetchContent`` must be a commit hash stored
 
 ``<versionRange>`` is a list of compatible versions using comma ``,`` as a separator (NOT semicolon ``;``).
 Version must be specified as ``<major>.[<minor>[.<patch>[.<tweak>]]]``
-with any missing element assumed zero (consistent with ``VERSION`` comparison operators in ``if()`` statement).
+and only specified elements are compared, i.e. ``1.2.3 = 1.2`` is ``TRUE`` where ``1.2`` is the version range.
 It can be preceded by  relational operators ``<``, ``<=``, ``>``, ``>=`` to specify boundaries of the
 range. If no relational operators are given that an exact match is requested.
-For example, ``VERSION_RANGE ">=1.2.3,<1.8"`` means from version ``1.2.3`` up to but not including version ``1.8.0``.
+For example, ``VERSION_RANGE ">=1.2.3,<1.8"`` means from version ``1.2.3`` up to but not including version ``1.8``.
 
 
 Name of the parent node, ``<parentName>``, is needed to construct the dependency tree.
@@ -133,8 +133,11 @@ a path relative to ``${CMAKE_CURRENT_BINARY_DIR}``
 #]=======================================================================]
 
 #[=======================================================================[.rst:
-(For Developers) Structure of the Dependency Tree
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[For Developers]
+^^^^^^^^^^^^^^^^
+
+Structure of the Dependency Tree
+********************************
 
 To correctly resolve valid versions and provide useful summaries we need to store
 the structure of the dependency tree.
@@ -179,13 +182,13 @@ Global Properties:
         ``NODE_ID`` - list of corresponding nodeIDs;
         ``VERSION`` - list of corresponding versions
 
-(For Developers) Verbose Output
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Verbose Output
+**************
 Passing ``--log-level=debug -D DEPENDENCYMANAGER_VERBOSE=ON`` to command-line, turns on
 extra printouts. This is useful for debugging only.
 
-(For Developers) Documentation of Utility Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Documentation of Utility Functions
+**********************************
 #]=======================================================================]
 
 # FetchContent has a non-cached variable which means it has to be included every time
@@ -578,9 +581,19 @@ Compares ``<version1>`` and ``<version2>``. ``<comp>`` can be one of
 ``""``, ``=``, ``<``, ``<=``, ``>``, ``>=``. Empty is equivalent to ``=``.
 Comparison operators are mapped to ``VERSION_<COMPARISON>`` options in
 ``if()`` statements.
+If ``<version2>`` has less digits than ``<version1>``,  truncate
+``<version1>`` so they are same length.
 Result is set to variable ``<out>`` in parent scope.
 #]=======================================================================]
 function(__DependencyManager_VersionCompare version1 comp version2 out)
+    string(REPLACE "." ";" v1 "${version1}")
+    string(REPLACE "." ";" v2 "${version2}")
+    list(LENGTH v1 n1)
+    list(LENGTH v2 n2)
+    if(n1 GREATER n2)
+        list(SUBLIST v1 0 ${n2} v1)
+        list(JOIN v1 "." version1)
+    endif()
     if (NOT comp)
         set(comparisonOperator VERSION_EQUAL)
     elseif (comp STREQUAL "=")
