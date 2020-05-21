@@ -2,8 +2,6 @@
 DependencyManager
 ------------------
 
-.. contents::
-
 .. module:: DependencyManager
 
 Overview
@@ -20,7 +18,9 @@ Declaring Dependency
 
 .. code-block:: cmake
 
-    DependencyManager_Declare(<name> <gitRepository> [VERSION_RANGE <versionRange>] [PARENT_NAME <parentName>]
+    DependencyManager_Declare(<name> <gitRepository>
+                              [VERSION_RANGE <versionRange>]
+                              [PARENT_NAME <parentName>]
                               [<contentOptions>...])
 
 The :cmake:command:`DependencyManager_Declare()` function is a wrapper over `FetchContent_Declare()`_
@@ -69,7 +69,10 @@ Populating Dependency
 
 .. code-block:: cmake
 
-    DependencyManager_Populate(<name> [PARENT_NAME <parentName>] [DO_NOT_MAKE_AVAILABLE] [NO_VERSION_ERROR])
+    DependencyManager_Populate(<name>
+                               [PARENT_NAME <parentName>]
+                               [DO_NOT_MAKE_AVAILABLE]
+                               [NO_VERSION_ERROR])
 
 This is a again a wrapper over `FetchContent_Populate()`_.
 Dependency being populated must have been declared sometime before.

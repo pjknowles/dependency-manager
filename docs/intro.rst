@@ -159,6 +159,14 @@ That way when the stored commits are updated after a pull,
 running cmake configuraiton will check out the correct version.
 This is the behavior that most users will want and expect.
 
+Managing Documentation
+^^^^^^^^^^^^^^^^^^^^^^
+We provide a utility module for managing documentation of dependencies, :cmake:module:`DependencyManagerDocs`.
+
+.. note::
+
+    Improve documentation.
+
 Authors
 ^^^^^^^
 Marat Sibaev and Peter J. Knowles.

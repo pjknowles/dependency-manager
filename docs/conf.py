@@ -43,12 +43,16 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'sphinx_rtd_theme'
-html_theme = 'nature'
+html_theme = 'sphinx_rtd_theme'
+# html_theme = 'nature'
 #html_theme = 'default'
 
 html_show_sourcelink = True
 html_title = 'DependencyManager Documentation'
+
+html_theme_options = {
+    "collapse_navigation": False
+}
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -59,7 +63,7 @@ html_static_path = ['_static']
 # -- Autodoc Settings --------------------------------------------------------
 
 autodoc_member_order = 'bysource'
-autodoc_default_options = {'show_ineritance': True, 'collapse': False}
+autodoc_default_options = {'show_ineritance': True, 'collapse': True}
 
 # -- Intersphinx Settings ----------------------------------------------------
 
