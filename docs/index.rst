@@ -6,4 +6,5 @@ Table of Contents
    :maxdepth: 2
 
    dependency_manager
+   dependency_manager_docs
 
