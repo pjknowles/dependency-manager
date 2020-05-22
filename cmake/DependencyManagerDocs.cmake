@@ -63,7 +63,7 @@ If not specified, it is assumed to be ``<url>/DoxygenTagFiles/<projectName>.tag`
 ``DEPENDS`` is followed by a list of projects whose documentation has to be build before current project.
 This ensures that tag files of dependencies are available.
 
-.. note:: Top level project (i.e. ``CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR``)
+.. note:: Top level project (``CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR OR CMAKE_PROJECT_NAME STREQUAL <projectName>``)
    attempts to build local documentation by default.
    This takes precedence over ``DEPENDENCYMANAGERDOCS_LOCAL`` but can be over-ruled by ``DEPENDENCYMANAGERDOCS_<projectName>_LOCAL``.
 
@@ -148,7 +148,7 @@ If evaluates to False, tries to use external documentation. If not set, it remai
     endif ()
 
     set(local "${DEPENDENCYMANAGERDOCS_LOCAL}")
-    if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR OR CMAKE_PROJECT_NAME STREQUAL projectName)
         set(local ON)
     endif ()
     if (NOT "${DEPENDENCYMANAGERDOCS_${projectName}_LOCAL}" STREQUAL "")
