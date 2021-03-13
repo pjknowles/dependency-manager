@@ -568,7 +568,7 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     message(STATUS
             "Declare dependency: NAME=${name} PARENT_NAME=${parentName} GIT_REPOSITORY=${GIT_REPOSITORY} GIT_TAG=${GIT_TAG}")
     if (DEPENDENCYMANAGER_FETCHCONTENT)
-        message(STATUS "DependencyManager_Declare: DEPENDENCYMANAGER_FETCHCONTENT")
+        message(STATUS "DependencyManager_Declare: DEPENDENCYMANAGER_FETCHCONTENT=${DEPENDENCYMANAGER_FETCHCONTENT}")
         include(FetchContent)
         FetchContent_Declare(
                 ${name}
@@ -686,7 +686,7 @@ function(DependencyManager_Populate name)
     endif ()
     messagev("DependencyManager_Populate(${name} PARENT_NAME ${parentName})")
     if (DEPENDENCYMANAGER_FETCHCONTENT)
-        message(STATUS "DependencyManager_Populate: DEPENDENCYMANAGER_FETCHCONTENT")
+        message(STATUS "DependencyManager_Populate: DEPENDENCYMANAGER_FETCHCONTENT=${DEPENDENCYMANAGER_FETCHCONTENT}")
         FetchContent_MakeAvailable(${name})
         return()
     endif ()
