@@ -210,8 +210,8 @@ option(DEPENDENCYMANAGER_VERSION_ERROR
         "If ON, raises an error when incompatible dependency versions are found" ON)
 option(DEPENDENCYMANAGER_VERBOSE
         "If ON, adds extra printout during processing. Can be useful for debugging." OFF)
-set(DEPENDENCYMANAGER_FETCHCONTENT "${DEPENDENCYMANAGER_FETCHCONTENT}" CACHE BOOL
-        "If ON, FetchContent is used to bring dependencies into the build tree rather than the source tree")
+option(DEPENDENCYMANAGER_FETCHCONTENT
+        "If ON, FetchContent is used to bring dependencies into the build tree rather than the source tree" OFF)
 
 macro(__DependencyManager_STAMP_DIR)
     set(STAMP_DIR "${DEPENDENCYMANAGER_BASE_DIR}/.cmake_stamp_dir")
@@ -567,7 +567,7 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     string(STRIP "${GIT_TAG}" GIT_TAG)
     message(STATUS
             "Declare dependency: NAME=${name} PARENT_NAME=${parentName} GIT_REPOSITORY=${GIT_REPOSITORY} GIT_TAG=${GIT_TAG}")
-    message(STATUS "DependencyManager_Declare: DEPENDENCYMANAGER_FETCHCONTENT=${DEPENDENCYMANAGER_FETCHCONTENT}")
+    messagev("DependencyManager_Declare: DEPENDENCYMANAGER_FETCHCONTENT=${DEPENDENCYMANAGER_FETCHCONTENT}")
     if (DEPENDENCYMANAGER_FETCHCONTENT)
         include(FetchContent)
         FetchContent_Declare(
@@ -685,7 +685,7 @@ function(DependencyManager_Populate name)
         set(parentName "${PROJECT_NAME}")
     endif ()
     messagev("DependencyManager_Populate(${name} PARENT_NAME ${parentName})")
-    message(STATUS "DependencyManager_Populate: DEPENDENCYMANAGER_FETCHCONTENT=${DEPENDENCYMANAGER_FETCHCONTENT}")
+    messagev("DependencyManager_Populate: DEPENDENCYMANAGER_FETCHCONTENT=${DEPENDENCYMANAGER_FETCHCONTENT}")
     if (DEPENDENCYMANAGER_FETCHCONTENT)
         FetchContent_MakeAvailable(${name})
         return()
