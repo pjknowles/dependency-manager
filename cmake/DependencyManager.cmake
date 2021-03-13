@@ -101,7 +101,7 @@ With option ``NO_VERSION_ERROR`` only a warning is printed and configuration con
 If cached option ``DEPENDENCYMANAGER_VERSION_ERROR`` is set to ``OFF``, then an error
 is not raised when version clash is found. Note, that ``NO_VERSION_ERROR`` takes precedence.
 
-If cached option ``DEPENDENCYMANAGER_FETCHCONTENT`` is set, then everything is implemented using standard
+If option ``DEPENDENCYMANAGER_FETCHCONTENT`` is set, then everything is implemented using standard
 ``FetchContent``, instead of dependencies being brought in to ``${DEPENDENCIES_DIR}``
 
 Note, that file locking is used which acts as a mutex when multiple configurations are run simultaneously.
@@ -210,8 +210,8 @@ option(DEPENDENCYMANAGER_VERSION_ERROR
         "If ON, raises an error when incompatible dependency versions are found" ON)
 option(DEPENDENCYMANAGER_VERBOSE
         "If ON, adds extra printout during processing. Can be useful for debugging." OFF)
-option(DEPENDENCYMANAGER_FETCHCONTENT
-        "If ON, FetchContent is used to bring dependencies into the build tree rather than the source tree" OFF)
+set(DEPENDENCYMANAGER_FETCHCONTENT "${DEPENDENCYMANAGER_FETCHCONTENT}" CACHE BOOL
+        "If ON, FetchContent is used to bring dependencies into the build tree rather than the source tree")
 
 macro(__DependencyManager_STAMP_DIR)
     set(STAMP_DIR "${DEPENDENCYMANAGER_BASE_DIR}/.cmake_stamp_dir")
@@ -568,6 +568,7 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     message(STATUS
             "Declare dependency: NAME=${name} PARENT_NAME=${parentName} GIT_REPOSITORY=${GIT_REPOSITORY} GIT_TAG=${GIT_TAG}")
     if (DEPENDENCYMANAGER_FETCHCONTENT)
+        message(STATUS "DependencyManager_Declare: DEPENDENCYMANAGER_FETCHCONTENT")
         include(FetchContent)
         FetchContent_Declare(
                 ${name}
@@ -685,6 +686,7 @@ function(DependencyManager_Populate name)
     endif ()
     messagev("DependencyManager_Populate(${name} PARENT_NAME ${parentName})")
     if (DEPENDENCYMANAGER_FETCHCONTENT)
+        message(STATUS "DependencyManager_Populate: DEPENDENCYMANAGER_FETCHCONTENT")
         FetchContent_MakeAvailable(${name})
         return()
     endif ()
