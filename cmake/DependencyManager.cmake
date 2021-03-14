@@ -101,6 +101,9 @@ With option ``NO_VERSION_ERROR`` only a warning is printed and configuration con
 If cached option ``DEPENDENCYMANAGER_VERSION_ERROR`` is set to ``OFF``, then an error
 is not raised when version clash is found. Note, that ``NO_VERSION_ERROR`` takes precedence.
 
+If option ``DEPENDENCYMANAGER_FETCHCONTENT`` is set, then everything is implemented using standard
+``FetchContent``, instead of dependencies being brought in to ``${DEPENDENCIES_DIR}``
+
 Note, that file locking is used which acts as a mutex when multiple configurations are run simultaneously.
 The file lock files are stored in ``STAMP_DIR``.
 
@@ -207,6 +210,8 @@ option(DEPENDENCYMANAGER_VERSION_ERROR
         "If ON, raises an error when incompatible dependency versions are found" ON)
 option(DEPENDENCYMANAGER_VERBOSE
         "If ON, adds extra printout during processing. Can be useful for debugging." OFF)
+option(DEPENDENCYMANAGER_FETCHCONTENT
+        "If ON, FetchContent is used to bring dependencies into the build tree rather than the source tree" OFF)
 
 macro(__DependencyManager_STAMP_DIR)
     set(STAMP_DIR "${DEPENDENCYMANAGER_BASE_DIR}/.cmake_stamp_dir")
@@ -562,6 +567,17 @@ function(DependencyManager_Declare name GIT_REPOSITORY)
     string(STRIP "${GIT_TAG}" GIT_TAG)
     message(STATUS
             "Declare dependency: NAME=${name} PARENT_NAME=${parentName} GIT_REPOSITORY=${GIT_REPOSITORY} GIT_TAG=${GIT_TAG}")
+    messagev("DependencyManager_Declare: DEPENDENCYMANAGER_FETCHCONTENT=${DEPENDENCYMANAGER_FETCHCONTENT}")
+    if (DEPENDENCYMANAGER_FETCHCONTENT)
+        include(FetchContent)
+        FetchContent_Declare(
+                ${name}
+                ${ARG_UNPARSED_ARGUMENTS}
+                GIT_REPOSITORY ${GIT_REPOSITORY}
+                GIT_TAG ${GIT_TAG}
+        )
+        return()
+    endif ()
 
     __DependencyManager_saveNode("${name}" "${parentName}" "${GIT_REPOSITORY}" "${GIT_TAG}" "${ARG_VERSION_RANGE}")
 
@@ -669,6 +685,11 @@ function(DependencyManager_Populate name)
         set(parentName "${PROJECT_NAME}")
     endif ()
     messagev("DependencyManager_Populate(${name} PARENT_NAME ${parentName})")
+    messagev("DependencyManager_Populate: DEPENDENCYMANAGER_FETCHCONTENT=${DEPENDENCYMANAGER_FETCHCONTENT}")
+    if (DEPENDENCYMANAGER_FETCHCONTENT)
+        FetchContent_MakeAvailable(${name})
+        return()
+    endif ()
 
     __DependencyManager_getNodeList(all)
     string(TOLOWER "${all_NAME}" all_NAME)
