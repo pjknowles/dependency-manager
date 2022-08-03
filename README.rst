@@ -3,4 +3,4 @@ DependencyManager
 
 Documentation
 ^^^^^^^^^^^^^
-Online documentation is available here: `<https://molpro.gitlab.io/dependency-manager/>`_.
+Online documentation is available here: `<https://molpro.github.io/dependency-manager/>`_.
