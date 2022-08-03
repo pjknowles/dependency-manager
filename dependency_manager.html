@@ -1,0 +1,478 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DependencyManager &mdash; DependencyManager Documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DependencyManagerDocs" href="dependency_manager_docs.html" />
+    <link rel="prev" title="Welcome to DependencyManager!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DependencyManager
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DependencyManager</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#declaring-dependency">Declaring Dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#populating-dependency">Populating Dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#update-of-commit-hash">Update of Commit Hash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#graph-of-dependency-tree">Graph of Dependency Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#for-developers">[For Developers]</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#structure-of-the-dependency-tree">Structure of the Dependency Tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verbose-output">Verbose Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#documentation-of-utility-functions">Documentation of Utility Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dependency_manager_docs.html">DependencyManagerDocs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager_docs.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager_docs.html#adding-documentation-for-a-project">Adding Documentation for a Project</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dependency_manager_docs.html#options">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dependency_manager_docs.html#local-variables">Local Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dependency_manager_docs.html#example-doxyfile">Example Doxyfile</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DependencyManager</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>DependencyManager</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dependency_manager.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-DependencyManager">
+<span id="dependencymanager"></span><h1>DependencyManager<a class="headerlink" href="#module-DependencyManager" title="Permalink to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>This module facilitates a super-build model for structuring a project as
+part of a software ecosystem. It manages a tree of dependencies with possible duplicates
+and version clashes.</p>
+</section>
+<section id="declaring-dependency">
+<h2>Declaring Dependency<a class="headerlink" href="#declaring-dependency" title="Permalink to this heading">¶</a></h2>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:dependencymanager_declare">
+<span class="sig-name descname"><span class="pre">DependencyManager_Declare</span></span><a class="headerlink" href="#command:dependencymanager_declare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">DependencyManager_Declare(</span><span class="nv">&lt;name&gt;</span><span class="w"> </span><span class="nv">&lt;gitRepository&gt;</span><span class="w"></span>
+<span class="w">                          </span><span class="p">[</span><span class="no">VERSION_RANGE</span><span class="w"> </span><span class="nv">&lt;versionRange&gt;</span><span class="p">]</span><span class="w"></span>
+<span class="w">                          </span><span class="p">[</span><span class="no">PARENT_NAME</span><span class="w"> </span><span class="nv">&lt;parentName&gt;</span><span class="p">]</span><span class="w"></span>
+<span class="w">                          </span><span class="p">[</span><span class="nv">&lt;contentOptions&gt;...</span><span class="p">]</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The <span class="target" id="index-0-command:dependencymanager_declare"></span><a class="reference internal" href="#command:dependencymanager_declare" title="dependencymanager_declare"><code class="xref cmake cmake-command docutils literal notranslate"><span class="pre">DependencyManager_Declare()</span></code></a> function is a wrapper over <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FetchContent.html#command:fetchcontent_declare">FetchContent_Declare()</a>
+with specialised functionality</p>
+<ol class="arabic simple">
+<li><p>Source code is downloaded into <code class="docutils literal notranslate"><span class="pre">${DEPENDENCYMANAGER_BASE_DIR}/&lt;name&gt;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">STAMP_DIR</span></code> is in source, by default at <code class="docutils literal notranslate"><span class="pre">${DEPENDENCYMANAGER_BASE_DIR}/.cmake_stamp_dir</span></code></p></li>
+<li><p>Only Git repositories are supported</p></li>
+<li><p>Commit hash of dependency must be stored in a file <code class="docutils literal notranslate"><span class="pre">${name}_SHA1</span></code> in directory from which
+<span class="target" id="index-1-command:dependencymanager_declare"></span><a class="reference internal" href="#command:dependencymanager_declare" title="dependencymanager_declare"><code class="xref cmake cmake-command docutils literal notranslate"><span class="pre">DependencyManager_Declare()</span></code></a> is called</p></li>
+</ol>
+<p>The cached variable <code class="docutils literal notranslate"><span class="pre">DEPENDENCYMANAGER_BASE_DIR</span></code> is the top level location where source is cloned.
+It is set to <code class="docutils literal notranslate"><span class="pre">${CMAKE_SOURCE_DIR}/dependencies</span></code> by default and should not be modified in the middle
+of the configuration process.</p>
+<p>The content <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> must be supported by <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FetchContent.html#command:fetchcontent_declare">FetchContent_Declare()</a>.
+For version checking <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> must be the name given to top level call of <code class="docutils literal notranslate"><span class="pre">project()</span></code> in
+the dependencies <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;gitRepository&gt;</span></code> must be a valid <code class="docutils literal notranslate"><span class="pre">GIT_REPOSITORY</span></code> as understood by <code class="docutils literal notranslate"><span class="pre">ExternalProject_Add</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;contentOptions&gt;</span></code> can be any of the GIT download or update/patch options
+that the <code class="docutils literal notranslate"><span class="pre">ExternalProject_Add</span></code> command understands, except for <code class="docutils literal notranslate"><span class="pre">GIT_TAG</span></code> and <code class="docutils literal notranslate"><span class="pre">GIT_REPOSITORY</span></code> which are
+specified separately.</p>
+<p>The value of <code class="docutils literal notranslate"><span class="pre">GIT_TAG</span></code> passed to <code class="docutils literal notranslate"><span class="pre">FetchContent</span></code> must be a commit hash stored in
+<code class="docutils literal notranslate"><span class="pre">${DEPENDENCIES_DIR}/&lt;name&gt;_SHA1</span></code> file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;versionRange&gt;</span></code> is a list of compatible versions using comma <code class="docutils literal notranslate"><span class="pre">,</span></code> as a separator (NOT semicolon <code class="docutils literal notranslate"><span class="pre">;</span></code>).
+Version must be specified as <code class="docutils literal notranslate"><span class="pre">&lt;major&gt;.[&lt;minor&gt;[.&lt;patch&gt;[.&lt;tweak&gt;]]]</span></code>
+and only specified elements are compared, i.e. <code class="docutils literal notranslate"><span class="pre">1.2.3</span> <span class="pre">=</span> <span class="pre">1.2</span></code> is <code class="docutils literal notranslate"><span class="pre">TRUE</span></code> where <code class="docutils literal notranslate"><span class="pre">1.2</span></code> is the version range.
+It can be preceded by  relational operators <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> to specify boundaries of the
+range. If no relational operators are given that an exact match is requested.
+For example, <code class="docutils literal notranslate"><span class="pre">VERSION_RANGE</span> <span class="pre">&quot;&gt;=1.2.3,&lt;1.8&quot;</span></code> means from version <code class="docutils literal notranslate"><span class="pre">1.2.3</span></code> up to but not including version <code class="docutils literal notranslate"><span class="pre">1.8</span></code>.</p>
+<p>Name of the parent node, <code class="docutils literal notranslate"><span class="pre">&lt;parentName&gt;</span></code>, is needed to construct the dependency tree.
+By default it is the name of the most recently called <code class="docutils literal notranslate"><span class="pre">project()</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">${PROJECT_NAME}</span></code>.
+In case there are multiple <code class="docutils literal notranslate"><span class="pre">project()</span></code> calls parent name can be specified explicitly with option <code class="docutils literal notranslate"><span class="pre">PARENT_NAME</span></code>.</p>
+</section>
+<section id="populating-dependency">
+<h2>Populating Dependency<a class="headerlink" href="#populating-dependency" title="Permalink to this heading">¶</a></h2>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:dependencymanager_populate">
+<span class="sig-name descname"><span class="pre">DependencyManager_Populate</span></span><a class="headerlink" href="#command:dependencymanager_populate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">DependencyManager_Populate(</span><span class="nv">&lt;name&gt;</span><span class="w"></span>
+<span class="w">                           </span><span class="p">[</span><span class="no">PARENT_NAME</span><span class="w"> </span><span class="nv">&lt;parentName&gt;</span><span class="p">]</span><span class="w"></span>
+<span class="w">                           </span><span class="p">[</span><span class="no">DO_NOT_MAKE_AVAILABLE</span><span class="p">]</span><span class="w"></span>
+<span class="w">                           </span><span class="p">[</span><span class="no">NO_VERSION_ERROR</span><span class="p">]</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This is a again a wrapper over <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FetchContent.html#command:fetchcontent_populate">FetchContent_Populate()</a>.
+Dependency being populated must have been declared sometime before.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> must be the same as in previous call to  <span class="target" id="index-2-command:dependencymanager_declare"></span><a class="reference internal" href="#command:dependencymanager_declare" title="dependencymanager_declare"><code class="xref cmake cmake-command docutils literal notranslate"><span class="pre">DependencyManager_Declare()</span></code></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;parentName&gt;</span></code> is the name of the parent node. By default, it is the last called <code class="docutils literal notranslate"><span class="pre">project()</span></code>.
+It must be the same value as in previous call to  <span class="target" id="index-3-command:dependencymanager_declare"></span><a class="reference internal" href="#command:dependencymanager_declare" title="dependencymanager_declare"><code class="xref cmake cmake-command docutils literal notranslate"><span class="pre">DependencyManager_Declare()</span></code></a>.
+Even if <code class="docutils literal notranslate"><span class="pre">PARENT_NAME</span></code> was not specified during declaration, the default values might differ
+if a different <code class="docutils literal notranslate"><span class="pre">project()</span></code> call was made at the same scope.</p>
+<p>After populating the content <code class="docutils literal notranslate"><span class="pre">add_subdirectory()</span></code> is called by default, unless <code class="docutils literal notranslate"><span class="pre">DO_NOT_MAKE_AVAILABLE</span></code> is set.</p>
+<p>During population stage .
+When there are duplicate dependencies <code class="docutils literal notranslate"><span class="pre">&lt;versionRange&gt;</span></code> is checked and if an already populated dependency
+is outside that range an error is raised during configuration.</p>
+<p>If subdirectory gets added, a version check is performed.
+Version of a dependency is read from the <code class="docutils literal notranslate"><span class="pre">${&lt;name&gt;_VERSION}</span></code> variable which is
+automatically set when <code class="docutils literal notranslate"><span class="pre">VERSION</span></code> is specified in the <code class="docutils literal notranslate"><span class="pre">project()</span></code> call.
+If cloned version is not compatible with <code class="docutils literal notranslate"><span class="pre">VERSION_RANGE</span></code> specified in <span class="target" id="index-0-command:dependencymanager_populate"></span><a class="reference internal" href="#command:dependencymanager_populate" title="dependencymanager_populate"><code class="xref cmake cmake-command docutils literal notranslate"><span class="pre">DependencyManager_Populate()</span></code></a>
+than an error gets raised and build configuration stops.
+With option <code class="docutils literal notranslate"><span class="pre">NO_VERSION_ERROR</span></code> only a warning is printed and configuration continues.
+<code class="docutils literal notranslate"><span class="pre">${name}_VERSION</span></code> is also brought up to <code class="docutils literal notranslate"><span class="pre">PARENT_SCOPE</span></code>.</p>
+<p>If cached option <code class="docutils literal notranslate"><span class="pre">DEPENDENCYMANAGER_VERSION_ERROR</span></code> is set to <code class="docutils literal notranslate"><span class="pre">OFF</span></code>, then an error
+is not raised when version clash is found. Note, that <code class="docutils literal notranslate"><span class="pre">NO_VERSION_ERROR</span></code> takes precedence.</p>
+<p>If option <code class="docutils literal notranslate"><span class="pre">DEPENDENCYMANAGER_FETCHCONTENT</span></code> is set, then everything is implemented using standard
+<code class="docutils literal notranslate"><span class="pre">FetchContent</span></code>, instead of dependencies being brought in to <code class="docutils literal notranslate"><span class="pre">${DEPENDENCIES_DIR}</span></code></p>
+<p>Note, that file locking is used which acts as a mutex when multiple configurations are run simultaneously.
+The file lock files are stored in <code class="docutils literal notranslate"><span class="pre">STAMP_DIR</span></code>.</p>
+</section>
+<section id="update-of-commit-hash">
+<h2>Update of Commit Hash<a class="headerlink" href="#update-of-commit-hash" title="Permalink to this heading">¶</a></h2>
+<p>Every time CMake configuration is rerun an update step is initiated which uses commit hash from <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;_SHA1</span></code> file,
+checking out the correct version if for some reason a dependency is at a different commit.
+Only advanced users with good knowledge of software stack should modify the <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;_SHA1</span></code> file.
+This applies to developers who in this paradigm need to be able to modify the source code of dependencies
+and/or checkout a different commit and successfully configure the build.
+Setting cache variable <code class="docutils literal notranslate"><span class="pre">DEPENDENCYMANAGER_HASH_UPDATE</span></code> to ON will overwrite <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;_SHA1</span></code> file with the
+currently checked out hash before the update stage, making sure that the work is preserved.</p>
+</section>
+<section id="graph-of-dependency-tree">
+<h2>Graph of Dependency Tree<a class="headerlink" href="#graph-of-dependency-tree" title="Permalink to this heading">¶</a></h2>
+<dl class="cmake command">
+<dt class="sig sig-object cmake" id="command:dependencymanager_dotgraph">
+<span class="sig-name descname"><span class="pre">DependencyManager_DotGraph</span></span><a class="headerlink" href="#command:dependencymanager_dotgraph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">DependencyManager_DotGraph(</span><span class="p">[</span><span class="no">NAME</span><span class="w"> </span><span class="nv">&lt;name&gt;</span><span class="p">]</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Writes a dot file with the current structure of dependency tree. It can be compiled to a graphics using graphviz.
+By default, the dot file is written to <code class="docutils literal notranslate"><span class="pre">${CMAKE_CURRENT_BINARY_DIR}/dependencyManager_dotGraph.dot</span></code>.
+This can be changed by passing <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code>, which can be an absolute path or
+a path relative to <code class="docutils literal notranslate"><span class="pre">${CMAKE_CURRENT_BINARY_DIR}</span></code></p>
+</section>
+<section id="for-developers">
+<h2>[For Developers]<a class="headerlink" href="#for-developers" title="Permalink to this heading">¶</a></h2>
+<section id="structure-of-the-dependency-tree">
+<h3>Structure of the Dependency Tree<a class="headerlink" href="#structure-of-the-dependency-tree" title="Permalink to this heading">¶</a></h3>
+<p>To correctly resolve valid versions and provide useful summaries we need to store
+the structure of the dependency tree.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">node</span></code> has a unique <code class="docutils literal notranslate"><span class="pre">nodeID</span></code>, represented with a dot separated list of integers <code class="docutils literal notranslate"><span class="pre">i1.i2.i3.i4.</span> <span class="pre">...</span></code>,
+where <code class="docutils literal notranslate"><span class="pre">i1</span></code> is the position of root project (there might be multiple roots at top level),
+<code class="docutils literal notranslate"><span class="pre">i2</span></code> is the position among children of <code class="docutils literal notranslate"><span class="pre">i1</span></code> at level 2, etc.
+For example <code class="docutils literal notranslate"><span class="pre">A-&gt;{B-&gt;{C},</span> <span class="pre">C-&gt;{E},</span> <span class="pre">D-&gt;{E}}</span></code> becomes <code class="docutils literal notranslate"><span class="pre">1-&gt;{1.1-&gt;{1.1.1},</span> <span class="pre">1.2-&gt;{1.2.1},</span> <span class="pre">1.3-&gt;{1.3.1}}</span></code></p>
+<p>A <code class="docutils literal notranslate"><span class="pre">node</span></code> contains the following features:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NAME</span></code> is name of the project on declaration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PARENT_NAME</span></code> is name of the parent project on declaration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CHILDREN</span></code> is an ordered set of nodeID’s for its children</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GIT_REPOSITORY</span></code> is the Git url to repository</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GIT_TAG</span></code> is the commit hash stored in relevant <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;_SHA1</span></code> file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VERSION_RANGE</span></code> is the range of required versions</p></li>
+</ol>
+<p>During declaration stage we register each node and add it as a child of a parent node.
+If a child node by that name already exists, than its content is overwritten and
+a warning about duplicate node gets printed.</p>
+<p>By design, nodes that are made available form a unique set. We call them parent nodes, as they
+are the only ones that can declare more dependencies as children.
+We track parent nodes and store the following features:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NAME</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NODE_ID</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VERSION</span></code> is the actual version of the project</p></li>
+</ol>
+<p>This is the complete definition of dependency tree .
+It is used to check the version and generate its graphical representation.</p>
+<p>Global Properties:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">__DependencyManager_property_nodeFeatures_${nodeID}</span></code> – store node features, one for each node in the full tree</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">__DependencyManager_property_nodeList</span></code> – keeps track of nodes as they are created by storing a list of names and node IDs</dt><dd><p>in multi-value-arguements <code class="docutils literal notranslate"><span class="pre">NAME</span></code> and <code class="docutils literal notranslate"><span class="pre">NODE_ID</span></code> respectively.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">__DependencyManager_property_parentNodes</span></code> – store extra features of parent nodes in multi-value-arguments:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">NAME</span></code> - list of parent names;
+<code class="docutils literal notranslate"><span class="pre">NODE_ID</span></code> - list of corresponding nodeIDs;
+<code class="docutils literal notranslate"><span class="pre">VERSION</span></code> - list of corresponding versions</p>
+</dd>
+</dl>
+</li>
+</ol>
+</section>
+<section id="verbose-output">
+<h3>Verbose Output<a class="headerlink" href="#verbose-output" title="Permalink to this heading">¶</a></h3>
+<p>Passing <code class="docutils literal notranslate"><span class="pre">--log-level=debug</span> <span class="pre">-D</span> <span class="pre">DEPENDENCYMANAGER_VERBOSE=ON</span></code> to command-line, turns on
+extra printouts. This is useful for debugging only.</p>
+</section>
+<section id="documentation-of-utility-functions">
+<h3>Documentation of Utility Functions<a class="headerlink" href="#documentation-of-utility-functions" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_hasDuplicates(</span><span class="nv">&lt;list&gt;</span><span class="w"> </span><span class="nv">&lt;out&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">&lt;list&gt;</span></code> contains duplicates, sets variable called <code class="docutils literal notranslate"><span class="pre">&lt;out&gt;</span></code> to <code class="docutils literal notranslate"><span class="pre">TRUE</span></code>,
+otherwise to <code class="docutils literal notranslate"><span class="pre">FALSE</span></code>.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_updateParentNodes(</span><span class="nv">&lt;name&gt;</span><span class="w"> </span><span class="nv">&lt;nodeID&gt;</span><span class="w"> </span><span class="nv">&lt;version&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Register a node as a parent by adding its parent node features to the global property.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_getParentNodes(</span><span class="nv">&lt;prefix&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Makes full content of parent nodes property available at parent scope
+via lists <code class="docutils literal notranslate"><span class="pre">${&lt;prefix&gt;}_NAME</span></code>, <code class="docutils literal notranslate"><span class="pre">${&lt;prefix&gt;}_NODE_ID</span></code>, <code class="docutils literal notranslate"><span class="pre">${&lt;prefix&gt;}_VERSION</span></code>.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_getParentNodeInfo(</span><span class="nv">&lt;prefix&gt;</span><span class="w"> </span><span class="nv">&lt;name&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Makes parent node features of a parent <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> available at parent scope
+via variables <code class="docutils literal notranslate"><span class="pre">${&lt;prefix&gt;}_NODE_ID</span></code>, <code class="docutils literal notranslate"><span class="pre">${&lt;prefix&gt;}_VERSION</span></code>.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_getNodeFeatures(</span><span class="nv">&lt;prefix&gt;</span><span class="w"> </span><span class="nv">&lt;nodeID&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Makes node features of a node <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> available at parent scope via variables
+<code class="docutils literal notranslate"><span class="pre">${prefix}_name</span></code>,
+<code class="docutils literal notranslate"><span class="pre">${prefix}_parentName</span></code>,
+<code class="docutils literal notranslate"><span class="pre">${prefix}_gitRepository</span></code>,
+<code class="docutils literal notranslate"><span class="pre">${prefix}_gitTag</span></code>,
+<code class="docutils literal notranslate"><span class="pre">${prefix}_versionRange</span></code>,
+<code class="docutils literal notranslate"><span class="pre">${prefix}_children</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">&lt;nodeID&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, than this is a root node and it gets created
+empty on the first call</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_addChild(</span><span class="nv">&lt;parentName&gt;</span><span class="w"> </span><span class="nv">&lt;child_nodeID&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Appends a child to a parent node.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_currentNodeID(</span><span class="nv">&lt;prefix&gt;</span><span class="w"> </span><span class="nv">&lt;name&gt;</span><span class="w"> </span><span class="nv">&lt;parentName&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Deduces the current nodeID by looking at the children of the parent node.
+Sets the following variables at parent scope:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">${prefix}_duplicate</span></code> to <code class="docutils literal notranslate"><span class="pre">TRUE</span></code> if there is already a node under that name among children;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${prefix}_nodeID</span></code> to deduced current node ID. If the node is a duplicate uses <code class="docutils literal notranslate"><span class="pre">nodeID</span></code> of the relevant child.</p></li>
+</ol>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_updateNodeList(</span><span class="nv">&lt;name&gt;</span><span class="w"> </span><span class="nv">&lt;nodeID&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Updates global list of nodes by storing <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;nodeID&gt;</span></code>.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_getNodeList(</span><span class="nv">&lt;name&gt;</span><span class="w"> </span><span class="nv">&lt;nodeID&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Updates global list of nodes by storing <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;nodeID&gt;</span></code>.
+Makes node list available at parent scope via variables <code class="docutils literal notranslate"><span class="pre">${&lt;prefix&gt;}_NAME</span></code>, <code class="docutils literal notranslate"><span class="pre">${&lt;prefix&gt;}_NODE_ID</span></code>.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_saveNode(</span><span class="nv">&lt;name&gt;</span><span class="w"> </span><span class="nv">&lt;parentName&gt;</span><span class="w"> </span><span class="nv">&lt;gitRepository&gt;</span><span class="w"> </span><span class="nv">&lt;gitTag&gt;</span><span class="w"> </span><span class="nv">&lt;versionRange&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Store node features. If the node is a duplicate, overwrite content of the registered node.
+Otherwise, create a new node property and add itself as a child of the parent node.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_update_SHA1(</span><span class="nv">&lt;name&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">DEPENDENCYMANAGER_HASH_UPDATE</span></code> is <code class="docutils literal notranslate"><span class="pre">ON</span></code>, than updates <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;_SHA1</span></code>
+of a cloned dependency. The repository and SHA1 file must be in current directory.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_VersionCompare(</span><span class="nv">&lt;version1&gt;</span><span class="w"> </span><span class="nv">&lt;comp&gt;</span><span class="w"> </span><span class="nv">&lt;version2&gt;</span><span class="w"> </span><span class="nv">&lt;out&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Compares <code class="docutils literal notranslate"><span class="pre">&lt;version1&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;version2&gt;</span></code>. <code class="docutils literal notranslate"><span class="pre">&lt;comp&gt;</span></code> can be one of
+<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>. Empty is equivalent to <code class="docutils literal notranslate"><span class="pre">=</span></code>.
+Comparison operators are mapped to <code class="docutils literal notranslate"><span class="pre">VERSION_&lt;COMPARISON&gt;</span></code> options in
+<code class="docutils literal notranslate"><span class="pre">if()</span></code> statements.
+If <code class="docutils literal notranslate"><span class="pre">&lt;version2&gt;</span></code> has less digits than <code class="docutils literal notranslate"><span class="pre">&lt;version1&gt;</span></code>,  truncate
+<code class="docutils literal notranslate"><span class="pre">&lt;version1&gt;</span></code> so they are same length.
+Result is set to variable <code class="docutils literal notranslate"><span class="pre">&lt;out&gt;</span></code> in parent scope.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">__DependencyManager_VersionCheck(</span><span class="nv">&lt;versionRange&gt;</span><span class="w"> </span><span class="nv">&lt;version&gt;</span><span class="w"> </span><span class="nv">&lt;out&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Checks that <code class="docutils literal notranslate"><span class="pre">&lt;version&gt;</span></code> is within <code class="docutils literal notranslate"><span class="pre">&lt;versionRange&gt;</span></code>. If it is within, then
+store <code class="docutils literal notranslate"><span class="pre">TRUE</span></code> in variable <code class="docutils literal notranslate"><span class="pre">&lt;out&gt;</span></code>, otherwise store <code class="docutils literal notranslate"><span class="pre">FALSE</span></code>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dependency_manager_docs.html" class="btn btn-neutral float-right" title="DependencyManagerDocs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to DependencyManager!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Marat Sibaev
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

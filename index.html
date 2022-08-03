@@ -1,0 +1,419 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Welcome to DependencyManager! &mdash; DependencyManager Documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DependencyManager" href="dependency_manager.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> DependencyManager
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="dependency_manager.html">DependencyManager</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#declaring-dependency">Declaring Dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#populating-dependency">Populating Dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#update-of-commit-hash">Update of Commit Hash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#graph-of-dependency-tree">Graph of Dependency Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#for-developers">[For Developers]</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dependency_manager.html#structure-of-the-dependency-tree">Structure of the Dependency Tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dependency_manager.html#verbose-output">Verbose Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dependency_manager.html#documentation-of-utility-functions">Documentation of Utility Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dependency_manager_docs.html">DependencyManagerDocs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager_docs.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager_docs.html#adding-documentation-for-a-project">Adding Documentation for a Project</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dependency_manager_docs.html#options">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dependency_manager_docs.html#local-variables">Local Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dependency_manager_docs.html#example-doxyfile">Example Doxyfile</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">DependencyManager</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>Welcome to DependencyManager!</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="welcome-to-dependencymanager">
+<h1><a class="toc-backref" href="#id4" role="doc-backlink">Welcome to DependencyManager!</a><a class="headerlink" href="#welcome-to-dependencymanager" title="Permalink to this heading">¶</a></h1>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#welcome-to-dependencymanager" id="id4">Welcome to DependencyManager!</a></p>
+<ul>
+<li><p><a class="reference internal" href="#introduction" id="id5">Introduction</a></p></li>
+<li><p><a class="reference internal" href="#the-problem" id="id6">The Problem</a></p>
+<ul>
+<li><p><a class="reference internal" href="#dependency-structure" id="id7">Dependency structure</a></p></li>
+<li><p><a class="reference internal" href="#working-with-dependencies" id="id8">Working with dependencies</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#managing-documentation" id="id9">Managing Documentation</a></p></li>
+<li><p><a class="reference internal" href="#authors" id="id10">Authors</a></p></li>
+<li><p><a class="reference internal" href="#table-of-contents" id="id11">Table of Contents</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="introduction">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h2>
+<p><span class="target" id="index-0-module:DependencyManager"></span><code class="xref cmake cmake-module docutils literal notranslate"><span class="pre">DependencyManager</span></code> is a CMake module that facilitates development of super-build projects.
+In particular it is designed for constructing software ecosystems, by which we mean
+a collection of projects each providing a single solution within a particular field
+favoring reliance on other solutions within the ecosystem over external dependencies.
+Formation of an ecosystem is an alternative way to structure a single mega-program
+by splitting it into individual repositories
+and has some key advantages. Firstly, it forces a modular build and
+encourages development of user friendly interface with better testing.
+More importantly, it encourages more open and collaborative environment.</p>
+<p>Projects in an ecosystem should be viewed as part of a single body,
+which necessitates that they are developed side by side.
+When working on a single project the source code of dependencies has
+to be readily available and modifiable without risking loss of work.
+The possibility of duplicate dependencies with different and some times
+conflicting versions also has to be managed.</p>
+<p><span class="target" id="index-1-module:DependencyManager"></span><code class="xref cmake cmake-module docutils literal notranslate"><span class="pre">DependencyManager</span></code>  leverages <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FetchContent.html">FetchContent</a> to provide the following features:</p>
+<ul class="simple">
+<li><p>declaration and popluation of dependencies</p></li>
+<li><p>placement of dependencies in source</p></li>
+<li><p>locking to ensure multiple cmake configurations can run simultaneously without conflict</p></li>
+<li><p>management of declared dependency commit hashes for needs of users OR developers (different modes)</p></li>
+<li><p>manage version clashes at configure time</p></li>
+<li><p>construction of dependency graphs</p></li>
+</ul>
+</section>
+<section id="the-problem">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">The Problem</a><a class="headerlink" href="#the-problem" title="Permalink to this heading">¶</a></h2>
+<section id="dependency-structure">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Dependency structure</a><a class="headerlink" href="#dependency-structure" title="Permalink to this heading">¶</a></h3>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="_images/example1.png"><img alt="_images/example1.png" src="_images/example1.png" style="width: 440.8px; height: 284.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Dependency tree of project <code class="docutils literal notranslate"><span class="pre">A</span></code>.
+Content in <code class="docutils literal notranslate"><span class="pre">()</span></code> specifies the version declared by the parent.
+Content in <code class="docutils literal notranslate"><span class="pre">[]</span></code> specifies the range of compatible versions.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>The above tree shows multiple duplicate entries. Project <code class="docutils literal notranslate"><span class="pre">C</span></code> is declared by both <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code>,
+but there can’t be multiple instances of the same module. We have to choose which version of <code class="docutils literal notranslate"><span class="pre">C</span></code>
+to make available. The two declared nodes <code class="docutils literal notranslate"><span class="pre">C</span></code> have different versions. <code class="docutils literal notranslate"><span class="pre">B</span></code> was developed using
+version 1.0.0, while <code class="docutils literal notranslate"><span class="pre">A</span></code> wants some newer features only available from <code class="docutils literal notranslate"><span class="pre">1.1.0</span></code>.
+The most intuitive way to resolve this dependency clash is to give priority to the first declared
+version, in this case <code class="docutils literal notranslate"><span class="pre">A-&gt;C</span></code>.</p>
+<p>The mechanism for declaring dependencies and deciding which one to make available on population
+is implemented in <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FetchContent.html">FetchContent</a>. After running the build configuration and resolving dependencies,
+we get the following tree.</p>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="_images/full_dependency_tree_clash.png"><img alt="_images/full_dependency_tree_clash.png" src="_images/full_dependency_tree_clash.png" style="width: 440.8px; height: 302.40000000000003px;" /></a>
+<figcaption>
+<p><span class="caption-text">Populated dependency tree of project <code class="docutils literal notranslate"><span class="pre">A</span></code>.
+Content in <code class="docutils literal notranslate"><span class="pre">()</span></code> specifies the checked out version.
+Grey arrows point to declared nodes which were not used,
+with dotted arrows showing which nodes were used instead.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>The first declared node <code class="docutils literal notranslate"><span class="pre">C</span></code> was chosen as expected. However, after checking compatible
+version ranges of each duplicate against the checked out version we can
+see that node <code class="docutils literal notranslate"><span class="pre">E</span></code> that was selected is not compatible with project <code class="docutils literal notranslate"><span class="pre">D</span></code>.
+This could lead to hard to debug errors during compilation, but luckily
+<span class="target" id="index-2-module:DependencyManager"></span><code class="xref cmake cmake-module docutils literal notranslate"><span class="pre">DependencyManager</span></code> stops cmake configuration with an error.
+The error can be suppressed by setting <code class="docutils literal notranslate"><span class="pre">DEPENDENCYMANAGER_VERSION_ERROR=OFF</span></code>,
+which allows the above graph of dependency tree to be generated.</p>
+<p>From the graph it’s clear that the simplest way to resolve this clash
+is to reverse the order in which dependencies of <code class="docutils literal notranslate"><span class="pre">A</span></code> were declared
+and populated.</p>
+<figure class="align-center" id="id3">
+<a class="reference internal image-reference" href="_images/full_dependency_tree_no_clash.png"><img alt="_images/full_dependency_tree_no_clash.png" src="_images/full_dependency_tree_no_clash.png" style="width: 440.8px; height: 302.40000000000003px;" /></a>
+<figcaption>
+<p><span class="caption-text">Populated dependency tree of project <code class="docutils literal notranslate"><span class="pre">A</span></code> after reversing order of declaration and population.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="working-with-dependencies">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Working with dependencies</a><a class="headerlink" href="#working-with-dependencies" title="Permalink to this heading">¶</a></h3>
+<p>After running the first configuration and fetching all of dependencies, project <code class="docutils literal notranslate"><span class="pre">A</span></code> might have
+the following structure:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>A/
+|-- CMakeLists.txt
+|-- dependencies/
+|   |-- CMakeLists.txt
+|   |-- B_SHA1
+|   |-- C_SHA1
+|   |-- D_SHA1
+|   |-- B/
+|   |   |-- ..
+|   |-- C/
+|   |   |-- ..
+|   |-- D/
+|       |-- ..
+|-- src/
+|   |-- CMakeLists.txt
+|   |-- ...
+|-- ...
+</pre></div>
+</div>
+<p>Files <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;_SHA1</span></code> store the commit hash for respective dependencies.</p>
+<p>Contents of <code class="docutils literal notranslate"><span class="pre">dependencies/CMakeLists.txt</span></code> should include</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">include(</span><span class="nb">FetchContent</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">FetchContent_Declare(</span><span class="w"></span>
+<span class="w">        </span><span class="nb">dependency_manager</span><span class="w"></span>
+<span class="w">        </span><span class="no">GIT_REPOSITORY</span><span class="w"> </span><span class="nv">&lt;REPOSITORY_NAME&gt;</span><span class="w"></span>
+<span class="w">        </span><span class="no">GIT_TAG</span><span class="w"> </span><span class="nv">&lt;COMMIT_TAG&gt;</span><span class="w"></span>
+<span class="nf">)</span><span class="w"></span>
+<span class="nf">FetchContent_MakeAvailable(</span><span class="nb">dependency_manager</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">set(</span><span class="no">CMAKE_MODULE_PATH</span><span class="w"> </span><span class="s">&quot;${CMAKE_MODULE_PATH}&quot;</span><span class="w"> </span><span class="no">PARENT_SCOPE</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">DependencyManager_Declare(</span><span class="no">B</span><span class="w"> </span><span class="nv">&lt;B_repositoryName&gt;</span><span class="w"> </span><span class="no">VERSION_RANGE</span><span class="w"> </span><span class="nv">&lt;B_versionRange&gt;</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">DependencyManager_Declare(</span><span class="no">C</span><span class="w"> </span><span class="nv">&lt;C_repositoryName&gt;</span><span class="w"> </span><span class="no">VERSION_RANGE</span><span class="w"> </span><span class="nv">&lt;C_versionRange&gt;</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">DependencyManager_Declare(</span><span class="no">D</span><span class="w"> </span><span class="nv">&lt;D_repositoryName&gt;</span><span class="w"> </span><span class="no">VERSION_RANGE</span><span class="w"> </span><span class="nv">&lt;D_versionRange&gt;</span><span class="nf">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This way the DependencyManager module is automatically downloaded without needing pre-installation.
+<code class="docutils literal notranslate"><span class="pre">FetchContent_MakeAvailable()</span></code> includes DependencyManager and sets <code class="docutils literal notranslate"><span class="pre">CMAKE_MODULE_PATH</span></code>.</p>
+<p>To use the targets provided in dependencies they still have to be populated.
+For example, <code class="docutils literal notranslate"><span class="pre">src/CMakeLists.txt</span></code> could include the following</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nf">include(</span><span class="nb">DependencyManager</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">DependencyManager_Populate(</span><span class="no">B</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">DependencyManager_Populate(</span><span class="no">C</span><span class="nf">)</span><span class="w"></span>
+<span class="nf">DependencyManager_Populate(</span><span class="no">D</span><span class="nf">)</span><span class="w"></span>
+<span class="p">...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The source code of dependencies is downloaded into <code class="docutils literal notranslate"><span class="pre">dependencies/&lt;name&gt;/</span></code> by default.
+This can be changed by setting <code class="docutils literal notranslate"><span class="pre">DEPENDENCYMANAGER_BASE_DIR</span></code> to a different path.
+Contrary to the usual approach in CMake, we do not want dependencies out-of-source
+in a build directory. This is because we might want to do some development of dependencies
+as well as the main project.</p>
+<p>For example, if we found a bug in project <code class="docutils literal notranslate"><span class="pre">C</span></code> we might prefer to fix it
+within the current workspace. Afterwards, we make a new commit and update it
+to version <code class="docutils literal notranslate"><span class="pre">1.1.1</span></code>. By default, rerunning cmake configuration will
+checkout the commit stored in <code class="docutils literal notranslate"><span class="pre">C_SHA1</span></code> and get us back to the buggy version.
+In this case we can update <code class="docutils literal notranslate"><span class="pre">C_SHA1</span></code> with the new hash either by hand or
+by setting <code class="docutils literal notranslate"><span class="pre">DEPENDENCYMANAGER_HASH_UPDATE</span></code> to <code class="docutils literal notranslate"><span class="pre">ON</span></code> and running
+cmake configuration which will do it for us.</p>
+<p>The default behaviour is to always checkout commit store in <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;_SHA1</span></code>.
+That way when the stored commits are updated after a pull,
+running cmake configuraiton will check out the correct version.
+This is the behavior that most users will want and expect.</p>
+</section>
+</section>
+<section id="managing-documentation">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Managing Documentation</a><a class="headerlink" href="#managing-documentation" title="Permalink to this heading">¶</a></h2>
+<p>We provide a utility module for managing documentation of dependencies, <span class="target" id="index-0-module:DependencyManagerDocs"></span><code class="xref cmake cmake-module docutils literal notranslate"><span class="pre">DependencyManagerDocs</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Improve documentation.</p>
+</div>
+</section>
+<section id="authors">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Authors</a><a class="headerlink" href="#authors" title="Permalink to this heading">¶</a></h2>
+<p>Marat Sibaev and Peter J. Knowles.</p>
+</section>
+<section id="table-of-contents">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Table of Contents</a><a class="headerlink" href="#table-of-contents" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dependency_manager.html">DependencyManager</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#declaring-dependency">Declaring Dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#populating-dependency">Populating Dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#update-of-commit-hash">Update of Commit Hash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#graph-of-dependency-tree">Graph of Dependency Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager.html#for-developers">[For Developers]</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dependency_manager_docs.html">DependencyManagerDocs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager_docs.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dependency_manager_docs.html#adding-documentation-for-a-project">Adding Documentation for a Project</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dependency_manager.html" class="btn btn-neutral float-right" title="DependencyManager" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Marat Sibaev
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
