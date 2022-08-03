@@ -1,4 +1,4 @@
-name: Build doxygen pages and publish to github pages
+name: Build sphinx pages and publish to github pages
 
 on:
   workflow_dispatch:

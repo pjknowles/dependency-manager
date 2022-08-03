@@ -1,6 +1,6 @@
-Welcome to DependencyManager!
-=============================
+DependencyManager
+=================
 
 Documentation
 ^^^^^^^^^^^^^
-Online documentation is available here: `<https://dependencymanager.gitlab.io/dependency-manager/>`_.
+Online documentation is available here: `<https://molpro.gitlab.io/dependency-manager/>`_.
